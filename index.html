@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Content Review</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <title>Content Review Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #3b82f6;
-            --primary-hover: #2563eb;
-            --bg-color: #0f172a;        /* Deep sleek dark background */
-            --card-bg: #ffffff;         /* Crisp white card for sharp contrast */
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
+            --primary: #6366f1;        /* Vibrant Indigo */
+            --primary-hover: #4f46e5;
+            --bg-color: #09090b;       /* Ultra dark zinc background */
+            --card-bg: #18181b;        /* Elevated zinc card */
+            --input-bg: #27272a;       /* Subtle input background */
+            --text-main: #f8fafc;      /* Crisp white text */
+            --text-muted: #a1a1aa;     /* Soft gray text */
+            --border-color: #3f3f46;
             --success: #10b981;
-            --link-color: #2563eb;
+            --accent-glow: rgba(99, 102, 241, 0.15);
         }
 
         body {
@@ -33,8 +34,9 @@
         .container {
             background-color: var(--card-bg);
             padding: 40px;
-            border-radius: 16px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.05);
             max-width: 600px;
             width: 100%;
             box-sizing: border-box;
@@ -46,8 +48,8 @@
             color: var(--text-main);
             margin-top: 0;
             margin-bottom: 24px;
-            font-weight: 600;
-            font-size: 1.6rem;
+            font-weight: 700;
+            font-size: 1.7rem;
             letter-spacing: -0.025em;
         }
 
@@ -55,143 +57,210 @@
             text-align: center;
             color: var(--text-muted);
             font-size: 0.95rem;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
+            background: var(--input-bg);
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-block;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .status-wrapper {
+            text-align: center;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
+        }
+
+        /* Fixed structural layout collision for the skipping reason container */
+        #skipReasonSection {
+            margin-top: 24px;
         }
 
         label {
             font-weight: 500;
             display: block;
-            margin-bottom: 8px;
-            color: var(--text-main);
-            font-size: 0.95rem;
+            margin-bottom: 10px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         select, textarea, input[type="text"] {
             width: 100%;
-            padding: 12px 16px;
+            padding: 14px 16px;
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: 12px;
             box-sizing: border-box;
             font-family: 'Inter', sans-serif;
             font-size: 1rem;
             color: var(--text-main);
-            background-color: #f8fafc;
+            background-color: var(--input-bg);
             transition: all 0.2s ease;
             cursor: pointer;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Fixed alignment and appearance normalization for dropdown selectors */
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            background-size: 16px;
+            padding-right: 42px;
         }
 
         select:focus, textarea:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-            background-color: #ffffff;
+            box-shadow: 0 0 0 3px var(--accent-glow);
+            background-color: #27272a;
         }
 
         textarea {
             resize: vertical;
-            min-height: 80px;
+            min-height: 90px;
             cursor: text;
         }
 
         .fallback-link-container {
             text-align: center;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
             font-size: 0.9rem;
-            background-color: #f1f5f9;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px dashed var(--border-color);
+            background-color: rgba(99, 102, 241, 0.05);
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            color: var(--text-muted);
         }
 
         .fallback-link-container a {
-            color: var(--link-color);
+            color: var(--primary);
             text-decoration: none;
             font-weight: 600;
+            margin-left: 8px;
+            transition: color 0.2s;
         }
 
         .fallback-link-container a:hover {
-            text-decoration: underline;
+            color: var(--text-main);
         }
 
+        /* Responsive Video Container */
         .video-container {
-            margin: 16px 0 24px 0;
+            margin: 16px 0 28px 0;
             background: #000000;
-            border-radius: 12px;
+            border-radius: 16px;
             overflow: hidden;
             display: none;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            /* Maintains aspect ratio (9:16 for vertical/mobile) */
+            aspect-ratio: 9 / 16;
+            width: 100%;
         }
 
         iframe {
             width: 100%;
-            height: 450px; /* Increased height to better accommodate TikTok portrait orientation */
+            height: 100%;
             border: none;
             display: block;
         }
 
         button {
             width: 100%;
-            padding: 14px;
-            background-color: var(--primary);
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.2s ease, transform 0.1s ease;
+            transition: all 0.2s ease;
             margin-top: 10px;
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2);
         }
 
         button:hover:not(:disabled) {
-            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px -3px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Skip Button Styling */
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            box-shadow: none;
+        }
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--input-bg);
+            color: var(--text-main);
         }
 
         button:active:not(:disabled) {
-            transform: scale(0.98);
+            transform: translateY(0);
         }
 
         button:disabled {
-            background-color: #94a3b8;
+            background: var(--border-color);
+            color: var(--text-muted);
             cursor: not-allowed;
-            opacity: 0.7;
+            box-shadow: none;
+            transform: none;
         }
 
-        #loadingMsg {
+        /* Loading & Progress Screens */
+        .feedback-screen {
             text-align: center;
-            color: var(--primary);
-            font-weight: 500;
-            margin: 20px 0;
-            animation: pulse 1.5s infinite;
+            padding: 40px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
-        @keyframes pulse {
-            0% { opacity: 0.6; }
-            50% { opacity: 1; }
-            100% { opacity: 0.6; }
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--input-bg);
+            border-bottom-color: var(--primary);
+            border-radius: 50%;
+            animation: rotation 1s linear infinite;
+            margin-bottom: 24px;
+        }
+
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .feedback-screen h3 {
+            margin: 0 0 10px 0;
+            color: var(--text-main);
+        }
+
+        .feedback-screen p {
+            color: var(--text-muted);
+            margin: 0;
         }
 
         .hidden {
             display: none !important;
         }
 
-        #finishedSection {
-            text-align: center;
-            padding: 20px 0;
-        }
-
         #finishedSection h3 {
             color: var(--success);
             font-size: 1.5rem;
-            margin-bottom: 10px;
-        }
-        
-        #finishedSection p {
-            color: var(--text-muted);
+            margin-bottom: 12px;
         }
     </style>
 </head>
@@ -200,7 +269,11 @@
 <div class="container">
     <h2>Content Review</h2>
 
-    <div id="loadingMsg">Loading configuration data...</div>
+    <div id="loadingMsg" class="feedback-screen">
+        <div class="spinner"></div>
+        <h3>Connecting</h3>
+        <p>Fetching your pending assignments...</p>
+    </div>
 
     <div class="form-group hidden" id="loginSection">
         <label for="usernameSelect">Select Profile</label>
@@ -210,13 +283,15 @@
     </div>
 
     <div id="playerSection" class="hidden">
-        <div class="status-text">
-            Reviewing item <strong style="color: var(--text-main);"><span id="currentCount">0</span> of <span id="totalCount">0</span></strong>
+        <div class="status-wrapper">
+            <div class="status-text">
+                Reviewing <strong style="color: var(--text-main);"><span id="currentCount">0</span> of <span id="totalCount">0</span></strong>
+            </div>
         </div>
         
         <div class="fallback-link-container">
-            Platform: <span id="platformLabel" style="font-weight:600; text-transform:capitalize;">Content</span> | 
-            <a id="directOpenLink" href="#" target="_blank">Open directly in new tab ↗</a>
+            Platform: <span id="platformLabel" style="font-weight:600; color:var(--text-main);">Content</span>
+            <a id="directOpenLink" href="#" target="_blank">Open directly ↗</a>
         </div>
 
         <div class="video-container" id="videoContainer">
@@ -237,18 +312,35 @@
             <textarea id="notes" placeholder="Feel free to add any additional context here."></textarea>
         </div>
 
-        <button id="submitBtn" onclick="submitResult()">Submit Review</button>
+        <button id="submitBtn" onclick="submitResult()">Submit Review (Enter)</button>
+        
+        <div class="form-group hidden" id="skipReasonSection">
+            <label for="skipReason">Reason for Skipping</label>
+            <select id="skipReason">
+                <option value="">Select a reason</option>
+                <option value="The video is not loading/working">The video is not loading/working</option>
+                <option value="The video is irrelevant">The video is irrelevant</option>
+            </select>
+        </div>
+
+        <button id="skipBtn" class="btn-secondary" onclick="skipResult()">Skip / Broken Link</button>
     </div>
 
-    <div id="finishedSection" class="hidden">
-        <h3>All reviews completed</h3>
-        <p>Thank you for your participation!</p>
+    <div id="progressSection" class="feedback-screen hidden">
+        <div class="spinner"></div>
+        <h3>Saving Submission</h3>
+        <p id="progressText">Logging reviews...</p>
+    </div>
+
+    <div id="finishedSection" class="feedback-screen hidden">
+        <h3>Reviewed</h3>
+        <p>There are no more pending videos assigned to you. Thank you for your participation!</p>
     </div>
 </div>
 
 <script>
     // Embedded Deployed Google Apps Script Endpoint
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwGakrByEE_KgzcUJCKvYC1kWOaVwg-ELlyLDCpx-avX32RZi8KPX4dVJeAprFVYSTHMQ/exec'; 
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyFFWOMrRFHRycKvIBiUIB4bTuFyucyskoAjlQCeNW0pI77MRWdvElTGgValte2Orv3YQ/exec'; 
     
     let allDataMaster = [];
     let allAssignedVideos = []; 
@@ -256,6 +348,13 @@
     let currentUser = "";
 
     window.addEventListener('DOMContentLoaded', initializeApplication);
+
+    // Keyboard Listener for "Enter" key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' && !document.getElementById('playerSection').classList.contains('hidden')) {
+            submitResult();
+        }
+    });
 
     async function initializeApplication() {
         const selectElement = document.getElementById("usernameSelect");
@@ -280,8 +379,7 @@
 
         } catch (error) {
             console.error("Initialization error:", error);
-            loadingMsg.innerText = "Error loading initialization matrix. Verify backend deployment configuration.";
-            loadingMsg.style.color = "#ef4444";
+            loadingMsg.innerHTML = '<h3 style="color:#ef4444;">Connection Error</h3><p>Could not load the database. Verify backend configuration.</p>';
         }
     }
 
@@ -299,8 +397,18 @@
             document.getElementById("totalCount").innerText = allAssignedVideos.length;
             loadVideo(currentIndex);
         } else {
-            alert("No data records are currently mapped to this user profile configuration.");
+            document.getElementById("loginSection").classList.add("hidden");
+            document.getElementById("finishedSection").classList.remove("hidden");
         }
+    }
+
+    function formatPlatformName(rawPlatform) {
+        const p = (rawPlatform || "").toLowerCase().trim();
+        if (p === "youtube") return "YouTube";
+        if (p === "tiktok") return "TikTok";
+        if (p === "instagram") return "Instagram";
+        if (p === "twitter" || p === "x") return "X (Twitter)";
+        return p ? (p.charAt(0).toUpperCase() + p.slice(1)) : "Unknown Platform";
     }
 
     function loadVideo(index) {
@@ -314,42 +422,29 @@
         const rawUrl = (videoData.url || "").trim();
         const platform = (videoData.platform || "").toLowerCase().trim();
 
-        // Update basic link attributes for easy reference
+        platformLabel.textContent = formatPlatformName(platform);
         directLink.href = rawUrl;
-        platformLabel.textContent = platform || "Content";
 
-        // 1. YouTube / YouTube Shorts Parsing Engine
         if (rawUrl.includes("youtu") || platform === "youtube") {
             const ytRegEx = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\/shorts\/)([^#\&\?]*).*/;
             const match = rawUrl.match(ytRegEx);
-            
             if (match && match[2].length === 11) {
                 embedUrl = `https://www.youtube-nocookie.com/embed/${match[2]}`;
             } else {
                 embedUrl = rawUrl;
             }
-
-        // 2. Instagram Posts / Reels Parsing Engine
         } else if (platform === "instagram" || rawUrl.includes("instagram.com")) {
             let cleanUrl = rawUrl.split('?')[0]; 
-            if (!cleanUrl.endsWith('/')) {
-                cleanUrl += '/';
-            }
+            if (!cleanUrl.endsWith('/')) { cleanUrl += '/'; }
             embedUrl = `${cleanUrl}embed`; 
-
-        // 3. TikTok Video Parsing Engine
         } else if (platform === "tiktok" || rawUrl.includes("tiktok.com")) {
-            // Extracts the structural numeric video ID string from standard TikTok patterns
             const tiktokRegEx = /\/video\/(\d+)/;
             const match = rawUrl.match(tiktokRegEx);
-            
             if (match && match[1]) {
                 embedUrl = `https://www.tiktok.com/embed/v2/${match[1]}`;
             } else {
-                embedUrl = rawUrl; // Fallback directly to raw URL if identifier matching fails
+                embedUrl = rawUrl; 
             }
-
-        // 4. Fallback default for unexpected links / other platform structures
         } else {
             embedUrl = rawUrl; 
         }
@@ -359,57 +454,89 @@
         
         document.getElementById("judgement").value = "";
         document.getElementById("notes").value = "";
+        document.getElementById("skipReasonSection").classList.add("hidden");
+        document.getElementById("skipReason").value = "";
     }
 
     async function submitResult() {
         const judgement = document.getElementById("judgement").value;
         const notes = document.getElementById("notes").value;
-        const btn = document.getElementById("submitBtn");
-
+        
         if (!judgement) {
-            alert("Please select a valid judgement outcome before processing.");
+            alert("Please select a judgement outcome before proceeding.");
             return;
         }
 
-        btn.disabled = true;
-        btn.innerText = "Processing submission...";
+        executeSave(judgement, notes);
+    }
+
+    function skipResult() {
+        const skipSection = document.getElementById("skipReasonSection");
+
+        if (skipSection.classList.contains("hidden")) {
+            skipSection.classList.remove("hidden");
+            return;
+        }
+
+        const reason = document.getElementById("skipReason").value;
+
+        if (!reason) {
+            alert("Please select a reason for skipping.");
+            return;
+        }
+
+        executeSave("Skipped", reason);
+    }
+
+    async function executeSave(judgement, notes) {
+        document.getElementById("playerSection").classList.add("hidden");
+        const progressSection = document.getElementById("progressSection");
+        progressSection.classList.remove("hidden");
+        
+        document.getElementById("progressText").innerText = 
+            `Logging review ${currentIndex + 1} of ${allAssignedVideos.length}...`;
 
         const currentVideo = allAssignedVideos[currentIndex];
-
         const payload = {
             username: currentUser,
             url: currentVideo.url,
             platform: currentVideo.platform || "", 
             judgement: judgement,
-            notes: notes
+            notes: notes,
+            skipped: judgement === "Skipped"
         };
 
         try {
             await fetch(APPS_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors', 
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
 
-            currentIndex++;
-
-            if (currentIndex < allAssignedVideos.length) {
-                loadVideo(currentIndex);
-            } else {
-                document.getElementById("playerSection").classList.add("hidden");
-                document.getElementById("finishedSection").classList.remove("hidden");
-            }
+            moveNext();
 
         } catch (error) {
             console.error("Transmission error:", error);
-            alert("Submission save failed. Try processing again.");
-        } finally {
-            btn.disabled = false;
-            btn.innerText = "Submit Review";
+            alert("Submission failed to save.");
+            progressSection.classList.add("hidden");
+            document.getElementById("playerSection").classList.remove("hidden");
         }
+    }
+
+    function moveNext() {
+        currentIndex++;
+        const progressSection = document.getElementById("progressSection");
+
+        setTimeout(() => {
+            progressSection.classList.add("hidden");
+            if (currentIndex < allAssignedVideos.length) {
+                document.getElementById("playerSection").classList.remove("hidden");
+                loadVideo(currentIndex);
+            } else {
+                document.getElementById("finishedSection").classList.remove("hidden");
+            }
+        }, 300); 
     }
 </script>
 
