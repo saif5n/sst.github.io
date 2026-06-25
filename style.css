@@ -1,0 +1,256 @@
+:root {
+    --primary: #6366f1;        /* Vibrant Indigo */
+    --primary-hover: #4f46e5;
+    --bg-color: #09090b;       /* Ultra dark zinc background */
+    --card-bg: #18181b;        /* Elevated zinc card */
+    --input-bg: #27272a;       /* Subtle input background */
+    --text-main: #f8fafc;      /* Crisp white text */
+    --text-muted: #a1a1aa;     /* Soft gray text */
+    --border-color: #3f3f46;
+    --success: #10b981;
+    --accent-glow: rgba(99, 102, 241, 0.15);
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    margin: 0;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.container {
+    background-color: var(--card-bg);
+    padding: 40px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.05);
+    max-width: 600px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+
+h2 {
+    text-align: center;
+    color: var(--text-main);
+    margin-top: 0;
+    margin-bottom: 24px;
+    font-weight: 700;
+    font-size: 1.7rem;
+    letter-spacing: -0.025em;
+}
+
+.status-text {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 24px;
+    background: var(--input-bg);
+    padding: 8px 16px;
+    border-radius: 20px;
+    display: inline-block;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.status-wrapper {
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+/* Fixed structural layout collision for the skipping reason container */
+#skipReasonSection {
+    margin-top: 24px;
+}
+
+label {
+    font-weight: 500;
+    display: block;
+    margin-bottom: 10px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+select, textarea, input[type="text"] {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    color: var(--text-main);
+    background-color: var(--input-bg);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Fixed alignment and appearance normalization for dropdown selectors */
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 16px;
+    padding-right: 42px;
+}
+
+select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+    background-color: #27272a;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 90px;
+    cursor: text;
+}
+
+.fallback-link-container {
+    text-align: center;
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+    background-color: rgba(99, 102, 241, 0.05);
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    color: var(--text-muted);
+}
+
+.fallback-link-container a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+    margin-left: 8px;
+    transition: color 0.2s;
+}
+
+.fallback-link-container a:hover {
+    color: var(--text-main);
+}
+
+/* Responsive Video Container */
+.video-container {
+    margin: 16px 0 28px 0;
+    background: #000000;
+    border-radius: 16px;
+    overflow: hidden;
+    display: none;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    /* Maintains aspect ratio (9:16 for vertical/mobile) */
+    aspect-ratio: 9 / 16;
+    width: 100%;
+}
+
+iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+}
+
+button {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 10px;
+    box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2);
+}
+
+button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px -3px rgba(99, 102, 241, 0.3);
+}
+
+/* Skip Button Styling */
+.btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    box-shadow: none;
+}
+.btn-secondary:hover:not(:disabled) {
+    background: var(--input-bg);
+    color: var(--text-main);
+}
+
+button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+button:disabled {
+    background: var(--border-color);
+    color: var(--text-muted);
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+/* Loading & Progress Screens */
+.feedback-screen {
+    text-align: center;
+    padding: 40px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--input-bg);
+    border-bottom-color: var(--primary);
+    border-radius: 50%;
+    animation: rotation 1s linear infinite;
+    margin-bottom: 24px;
+}
+
+@keyframes rotation {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.feedback-screen h3 {
+    margin: 0 0 10px 0;
+    color: var(--text-main);
+}
+
+.feedback-screen p {
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.hidden {
+    display: none !important;
+}
+
+#finishedSection h3 {
+    color: var(--success);
+    font-size: 1.5rem;
+    margin-bottom: 12px;
+}
