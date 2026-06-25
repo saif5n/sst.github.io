@@ -79,7 +79,7 @@ async function attemptLogin() {
     loginError.classList.remove("hidden");
     loginBtn.innerText = "Login";
     loginBtn.disabled = false;
-    }
+}
 }
 
 function formatPlatformName(rawPlatform) {
@@ -178,18 +178,15 @@ async function executeSave(judgement, notes) {
         `Logging review ${currentIndex + 1} of ${allAssignedVideos.length}...`;
 
     const currentVideo = allAssignedVideos[currentIndex];
+
+    // FIX: Include the rowId so the server knows which row to update
     const payload = {
-        username: currentUser,
-        url: currentVideo.url,
-        platform: currentVideo.platform || "", 
+        rowId: currentVideo.id, 
         judgement: judgement,
-        notes: notes,
-        skipped: judgement === "Skipped"
+        notes: notes
     };
 
     try {
-        // UPDATED: Now points to the Vercel save function 
-        // mode: 'no-cors' is completely removed so we can actually read success/failure responses!
         const response = await fetch('/api/save', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -201,7 +198,7 @@ async function executeSave(judgement, notes) {
         } else {
             const errorData = await response.json();
             console.error("Server Error:", errorData);
-            alert("Submission failed to save. Check console for details.");
+            alert("Submission failed to save. Error: " + (errorData.message || "Unknown error"));
             progressSection.classList.add("hidden");
             document.getElementById("playerSection").classList.remove("hidden");
         }
