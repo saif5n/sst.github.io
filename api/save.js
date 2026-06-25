@@ -17,7 +17,6 @@ export default async function handler(req, res) {
   try {
     // 1. UPDATE URLs sheet
     if (isSkipped) {
-      // If skipped, update Status (Col D) and Reason (Col E)
       await sheets.spreadsheets.values.update({
         spreadsheetId,
         range: `URLs!D${rowId}:E${rowId}`, 
@@ -25,7 +24,6 @@ export default async function handler(req, res) {
         requestBody: { values: [['Skipped', notes]] }, 
       });
     } else {
-      // If reviewed, just update Status (Col D)
       await sheets.spreadsheets.values.update({
         spreadsheetId,
         range: `URLs!D${rowId}`, 
@@ -34,13 +32,12 @@ export default async function handler(req, res) {
       });
     }
 
-    // 2. INSERT to Submissions sheet (Only if NOT skipped)
+    // 2. APPEND to Submissions sheet (Only if NOT skipped)
     if (!isSkipped) {
-      await sheets.spreadsheets.values.insert({
+      await sheets.spreadsheets.values.append({
         spreadsheetId,
-        range: 'Submissions!A2', 
+        range: 'Submissions!A:F', // Appends to the next available row
         valueInputOption: 'USER_ENTERED',
-        insertDataOption: 'INSERT_ROWS',
         requestBody: { 
           values: [[
             new Date().toLocaleString(), 
