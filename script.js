@@ -1,7 +1,6 @@
 // Embedded Deployed Google Apps Script Endpoint
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyFFWOMrRFHRycKvIBiUIB4bTuFyucyskoAjlQCeNW0pI77MRWdvElTGgValte2Orv3YQ/exec'; 
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw8GqgEhcnHmDRckY3DmftbPC0QzhfhRJ8yK1PGfyrbUjTCU786Y0052jg315y0HvGFQQ/exec'; 
 
-let allDataMaster = [];
 let allAssignedVideos = []; 
 let currentIndex = 0;
 let currentUser = "";
@@ -13,51 +12,67 @@ document.addEventListener('keydown', function(event) {
     if (event.key === 'Enter' && !document.getElementById('playerSection').classList.contains('hidden')) {
         submitResult();
     }
+    // Allow hitting Enter to login
+    if (event.key === 'Enter' && !document.getElementById('loginSection').classList.contains('hidden')) {
+        attemptLogin();
+    }
 });
 
-async function initializeApplication() {
-    const selectElement = document.getElementById("usernameSelect");
-    const loadingMsg = document.getElementById("loadingMsg");
-    const loginSection = document.getElementById("loginSection");
-
-    try {
-        const response = await fetch(APPS_SCRIPT_URL);
-        allDataMaster = await response.json(); 
-        
-        const uniqueUsers = [...new Set(allDataMaster.map(item => item.username).filter(Boolean))];
-        
-        uniqueUsers.forEach(user => {
-            const opt = document.createElement("option");
-            opt.value = user;
-            opt.textContent = user;
-            selectElement.appendChild(opt);
-        });
-
-        loadingMsg.classList.add("hidden");
-        loginSection.classList.remove("hidden");
-
-    } catch (error) {
-        console.error("Initialization error:", error);
-        loadingMsg.innerHTML = '<h3 style="color:#ef4444;">Connection Error</h3><p>Could not load the database. Verify backend configuration.</p>';
-    }
+function initializeApplication() {
+    // Hide loading, show login immediately since we don't fetch data until they log in
+    document.getElementById("loadingMsg").classList.add("hidden");
+    document.getElementById("loginSection").classList.remove("hidden");
 }
 
-function startSession() {
-    const selectElement = document.getElementById("usernameSelect");
-    currentUser = selectElement.value;
+async function attemptLogin() {
+    const uid = document.getElementById("uidInput").value.trim();
+    const password = document.getElementById("passwordInput").value.trim();
+    const loginError = document.getElementById("loginError");
+    const loginBtn = document.getElementById("loginBtn");
 
-    if (!currentUser) return; 
+    if (!uid || !password) {
+        loginError.innerText = "Please enter both UID and Password.";
+        loginError.classList.remove("hidden");
+        return;
+    }
 
-    allAssignedVideos = allDataMaster.filter(row => row.username === currentUser);
+    // UI Updates during fetch
+    loginBtn.innerText = "Verifying...";
+    loginBtn.disabled = true;
+    loginError.classList.add("hidden");
 
-    if (allAssignedVideos.length > 0) {
-        document.getElementById("loginSection").classList.add("hidden");
-        document.getElementById("playerSection").classList.remove("hidden");
-        document.getElementById("totalCount").innerText = allAssignedVideos.length;
-        loadVideo(currentIndex);
-    } else {
-        document.getElementById("loginSection").classList.add("hidden");
-        document.getElementById("finishedSection").classList.remove("hidden");
+    try {
+        // Send login credentials to the backend
+        const response = await fetch(APPS_SCRIPT_URL + "?action=login&uid=" + encodeURIComponent(uid) + "&password=" + encodeURIComponent(password));
+        const result = await response.json();
+
+        if (result.success) {
+            currentUser = result.username;
+            allAssignedVideos = result.assignedVideos;
+
+            document.getElementById("loginSection").classList.add("hidden");
+            
+            if (allAssignedVideos.length > 0) {
+                document.getElementById("playerSection").classList.remove("hidden");
+                document.getElementById("totalCount").innerText = allAssignedVideos.length;
+                loadVideo(currentIndex);
+            } else {
+                document.getElementById("finishedSection").classList.remove("hidden");
+            }
+        } else {
+            // Login failed
+            loginError.innerText = result.message || "Invalid UID or Password.";
+            loginError.classList.remove("hidden");
+            loginBtn.innerText = "Login";
+            loginBtn.disabled = false;
+        }
+
+    } catch (error) {
+        console.error("Login error:", error);
+        loginError.innerText = "Connection error. Please try again.";
+        loginError.classList.remove("hidden");
+        loginBtn.innerText = "Login";
+        loginBtn.disabled = false;
     }
 }
 
@@ -84,6 +99,7 @@ function loadVideo(index) {
     platformLabel.textContent = formatPlatformName(platform);
     directLink.href = rawUrl;
 
+    // Platform logic remains identical
     if (rawUrl.includes("youtu") || platform === "youtube") {
         const ytRegEx = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\/shorts\/)([^#\&\?]*).*/;
         const match = rawUrl.match(ytRegEx);
@@ -157,6 +173,7 @@ async function executeSave(judgement, notes) {
 
     const currentVideo = allAssignedVideos[currentIndex];
     const payload = {
+        action: 'submit', // Explicitly tell backend this is a submission
         username: currentUser,
         url: currentVideo.url,
         platform: currentVideo.platform || "", 

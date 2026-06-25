@@ -82,7 +82,7 @@ label {
     letter-spacing: 0.05em;
 }
 
-select, textarea, input[type="text"] {
+select, textarea, input[type="text"], input[type="password"] {
     width: 100%;
     padding: 14px 16px;
     border: 1px solid var(--border-color);

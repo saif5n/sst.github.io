@@ -17,12 +17,15 @@
         <h3>Loading</h3>
         <p>Fetching your assigned content...</p>
     </div>
-
-    <div class="form-group hidden" id="loginSection">
-        <label for="usernameSelect">Select Profile</label>
-        <select id="usernameSelect" onchange="startSession()">
-            <option value="">Choose your name</option>
-        </select>
+<div class="form-group hidden" id="loginSection">
+        <label for="uidInput">User ID</label>
+        <input type="text" id="uidInput" placeholder="Enter your 10-digit UID">
+        
+        <label for="passwordInput" style="margin-top: 16px;">Password</label>
+        <input type="password" id="passwordInput" placeholder="Enter your password">
+        
+        <button id="loginBtn" onclick="attemptLogin()" style="margin-top: 24px;">Login</button>
+        <p id="loginError" style="color: #ef4444; font-size: 0.9rem; text-align: center; margin-top: 12px;" class="hidden">Invalid UID or Password.</p>
     </div>
 
     <div id="playerSection" class="hidden">
