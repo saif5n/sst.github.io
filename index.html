@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Validation Portal</title>
+    <title>Content Review</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -15,6 +15,7 @@
             --text-muted: #64748b;
             --border-color: #e2e8f0;
             --success: #10b981;
+            --link-color: #2563eb;
         }
 
         body {
@@ -46,7 +47,8 @@
             margin-top: 0;
             margin-bottom: 24px;
             font-weight: 600;
-            font-size: 1.5rem;
+            font-size: 1.6rem;
+            letter-spacing: -0.025em;
         }
 
         .status-text {
@@ -79,6 +81,7 @@
             color: var(--text-main);
             background-color: #f8fafc;
             transition: all 0.2s ease;
+            cursor: pointer;
         }
 
         select:focus, textarea:focus {
@@ -91,10 +94,31 @@
         textarea {
             resize: vertical;
             min-height: 80px;
+            cursor: text;
+        }
+
+        .fallback-link-container {
+            text-align: center;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+            background-color: #f1f5f9;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px dashed var(--border-color);
+        }
+
+        .fallback-link-container a {
+            color: var(--link-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .fallback-link-container a:hover {
+            text-decoration: underline;
         }
 
         .video-container {
-            margin: 24px 0;
+            margin: 16px 0 24px 0;
             background: #000000;
             border-radius: 12px;
             overflow: hidden;
@@ -104,7 +128,7 @@
 
         iframe {
             width: 100%;
-            height: 340px;
+            height: 450px; /* Increased height to better accommodate TikTok portrait orientation */
             border: none;
             display: block;
         }
@@ -141,7 +165,6 @@
             text-align: center;
             color: var(--primary);
             font-weight: 500;
-            display: none;
             margin: 20px 0;
             animation: pulse 1.5s infinite;
         }
@@ -175,25 +198,27 @@
 <body>
 
 <div class="container">
-    <h2>Task Validation</h2>
+    <h2>Content Review</h2>
 
-    <div class="form-group" id="loginSection">
-        <label for="usernameSelect">Select Your Profile</label>
+    <div id="loadingMsg">Loading configuration data...</div>
+
+    <div class="form-group hidden" id="loginSection">
+        <label for="usernameSelect">Select Profile</label>
         <select id="usernameSelect" onchange="startSession()">
-            <option value="">-- Choose Name --</option>
-            <option value="Player1">Player1</option>
-            <option value="Player2">Player2</option>
-            <option value="Player3">Player3</option>
+            <option value="">Choose your name</option>
         </select>
     </div>
 
-    <div id="loadingMsg">Loading your assigned tasks...</div>
-
     <div id="playerSection" class="hidden">
         <div class="status-text">
-            Reviewing video <strong style="color: var(--text-main);"><span id="currentCount">0</span> of <span id="totalCount">0</span></strong>
+            Reviewing item <strong style="color: var(--text-main);"><span id="currentCount">0</span> of <span id="totalCount">0</span></strong>
         </div>
         
+        <div class="fallback-link-container">
+            Platform: <span id="platformLabel" style="font-weight:600; text-transform:capitalize;">Content</span> | 
+            <a id="directOpenLink" href="#" target="_blank">Open directly in new tab ↗</a>
+        </div>
+
         <div class="video-container" id="videoContainer">
             <iframe id="videoFrame" src="" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
         </div>
@@ -201,7 +226,7 @@
         <div class="form-group">
             <label for="judgement">Judgement</label>
             <select id="judgement">
-                <option value="">-- Select an outcome --</option>
+                <option value="">Select an outcome</option>
                 <option value="Correct">Correct</option>
                 <option value="Incorrect">Incorrect</option>
             </select>
@@ -209,15 +234,15 @@
 
         <div class="form-group">
             <label for="notes">Notes (Optional)</label>
-            <textarea id="notes" placeholder="Add any specific context or timestamps here..."></textarea>
+            <textarea id="notes" placeholder="Add specific context, tags, or timestamps here..."></textarea>
         </div>
 
-        <button id="submitBtn" onclick="submitResult()">Submit Validation</button>
+        <button id="submitBtn" onclick="submitResult()">Submit Review</button>
     </div>
 
     <div id="finishedSection" class="hidden">
-        <h3>All tasks completed</h3>
-        <p>Your validations have been successfully logged. You can close this window.</p>
+        <h3>All reviews completed</h3>
+        <p>Your adjustments have been logged to the submission matrix successfully.</p>
     </div>
 </div>
 
@@ -225,41 +250,56 @@
     // Embedded Deployed Google Apps Script Endpoint
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxaBa_Qx5s0YnJ5qfppOMfty9cRCBsiuX2L9EmRg_YjfnxNkEe6DPDGfP1vzD54RCSbUA/exec'; 
     
+    let allDataMaster = [];
     let allAssignedVideos = []; 
     let currentIndex = 0;
     let currentUser = "";
 
-    async function startSession() {
+    window.addEventListener('DOMContentLoaded', initializeApplication);
+
+    async function initializeApplication() {
+        const selectElement = document.getElementById("usernameSelect");
+        const loadingMsg = document.getElementById("loadingMsg");
+        const loginSection = document.getElementById("loginSection");
+
+        try {
+            const response = await fetch(APPS_SCRIPT_URL);
+            allDataMaster = await response.json(); 
+            
+            const uniqueUsers = [...new Set(allDataMaster.map(item => item.username).filter(Boolean))];
+            
+            uniqueUsers.forEach(user => {
+                const opt = document.createElement("option");
+                opt.value = user;
+                opt.textContent = user;
+                selectElement.appendChild(opt);
+            });
+
+            loadingMsg.classList.add("hidden");
+            loginSection.classList.remove("hidden");
+
+        } catch (error) {
+            console.error("Initialization error:", error);
+            loadingMsg.innerText = "Error loading initialization matrix. Verify backend deployment configuration.";
+            loadingMsg.style.color = "#ef4444";
+        }
+    }
+
+    function startSession() {
         const selectElement = document.getElementById("usernameSelect");
         currentUser = selectElement.value;
 
         if (!currentUser) return; 
 
-        selectElement.disabled = true;
-        document.getElementById("loadingMsg").style.display = "block";
+        allAssignedVideos = allDataMaster.filter(row => row.username === currentUser);
 
-        try {
-            const response = await fetch(APPS_SCRIPT_URL);
-            const data = await response.json(); 
-            
-            allAssignedVideos = data.filter(row => row.username === currentUser);
-
-            document.getElementById("loadingMsg").style.display = "none";
-
-            if (allAssignedVideos.length > 0) {
-                document.getElementById("playerSection").classList.remove("hidden");
-                document.getElementById("totalCount").innerText = allAssignedVideos.length;
-                loadVideo(currentIndex);
-            } else {
-                alert("No videos assigned to this user.");
-                selectElement.disabled = false;
-            }
-
-        } catch (error) {
-            console.error("Error fetching data:", error);
-            alert("Failed to load data. Make sure your Apps Script URL is correct.");
-            selectElement.disabled = false;
-            document.getElementById("loadingMsg").style.display = "none";
+        if (allAssignedVideos.length > 0) {
+            document.getElementById("loginSection").classList.add("hidden");
+            document.getElementById("playerSection").classList.remove("hidden");
+            document.getElementById("totalCount").innerText = allAssignedVideos.length;
+            loadVideo(currentIndex);
+        } else {
+            alert("No data records are currently mapped to this user profile configuration.");
         }
     }
 
@@ -267,34 +307,49 @@
         document.getElementById("currentCount").innerText = index + 1;
         const videoData = allAssignedVideos[index];
         const iframe = document.getElementById("videoFrame");
+        const directLink = document.getElementById("directOpenLink");
+        const platformLabel = document.getElementById("platformLabel");
 
         let embedUrl = "";
         const rawUrl = (videoData.url || "").trim();
         const platform = (videoData.platform || "").toLowerCase().trim();
 
-        // Armored fallback: Checks explicit text and domain string patterns to bypass sheet typos
+        // Update basic link attributes for easy reference
+        directLink.href = rawUrl;
+        platformLabel.textContent = platform || "Content";
+
+        // 1. YouTube / YouTube Shorts Parsing Engine
         if (rawUrl.includes("youtu") || platform === "youtube") {
             const ytRegEx = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\/shorts\/)([^#\&\?]*).*/;
             const match = rawUrl.match(ytRegEx);
             
             if (match && match[2].length === 11) {
-                const videoId = match[2];
-                // Switched to non-cookie privacy environment to lower embedding hurdles
-                embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}`;
+                embedUrl = `https://www.youtube-nocookie.com/embed/${match[2]}`;
             } else {
-                console.error("Could not parse YouTube ID from:", rawUrl);
                 embedUrl = rawUrl;
             }
 
+        // 2. Instagram Posts / Reels Parsing Engine
         } else if (platform === "instagram" || rawUrl.includes("instagram.com")) {
             let cleanUrl = rawUrl.split('?')[0]; 
             if (!cleanUrl.endsWith('/')) {
                 cleanUrl += '/';
             }
             embedUrl = `${cleanUrl}embed`; 
-            
+
+        // 3. TikTok Video Parsing Engine
         } else if (platform === "tiktok" || rawUrl.includes("tiktok.com")) {
-            embedUrl = rawUrl; 
+            // Extracts the structural numeric video ID string from standard TikTok patterns
+            const tiktokRegEx = /\/video\/(\d+)/;
+            const match = rawUrl.match(tiktokRegEx);
+            
+            if (match && match[1]) {
+                embedUrl = `https://www.tiktok.com/embed/v2/${match[1]}`;
+            } else {
+                embedUrl = rawUrl; // Fallback directly to raw URL if identifier matching fails
+            }
+
+        // 4. Fallback default for unexpected links / other platform structures
         } else {
             embedUrl = rawUrl; 
         }
@@ -312,18 +367,19 @@
         const btn = document.getElementById("submitBtn");
 
         if (!judgement) {
-            alert("Please select a judgement (Correct/Incorrect) before submitting.");
+            alert("Please select a valid judgement outcome before processing.");
             return;
         }
 
         btn.disabled = true;
-        btn.innerText = "Submitting...";
+        btn.innerText = "Processing submission...";
 
         const currentVideo = allAssignedVideos[currentIndex];
 
         const payload = {
             username: currentUser,
             url: currentVideo.url,
+            platform: currentVideo.platform || "", 
             judgement: judgement,
             notes: notes
         };
@@ -348,11 +404,11 @@
             }
 
         } catch (error) {
-            console.error("Error submitting data:", error);
-            alert("There was an error saving your submission. Please try again.");
+            console.error("Transmission error:", error);
+            alert("Submission save failed. Try processing again.");
         } finally {
             btn.disabled = false;
-            btn.innerText = "Submit Validation";
+            btn.innerText = "Submit Review";
         }
     }
 </script>
