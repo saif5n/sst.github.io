@@ -1,1 +1,361 @@
-# sst.github.io
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Validation Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --bg-color: #0f172a;        /* Deep sleek dark background */
+            --card-bg: #ffffff;         /* Crisp white card for sharp contrast */
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --success: #10b981;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 100%;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--text-main);
+            margin-top: 0;
+            margin-bottom: 24px;
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+
+        .status-text {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: 500;
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-main);
+            font-size: 0.95rem;
+        }
+
+        select, textarea, input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            color: var(--text-main);
+            background-color: #f8fafc;
+            transition: all 0.2s ease;
+        }
+
+        select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+            background-color: #ffffff;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .video-container {
+            margin: 24px 0;
+            background: #000000;
+            border-radius: 12px;
+            overflow: hidden;
+            display: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        iframe {
+            width: 100%;
+            height: 340px;
+            border: none;
+            display: block;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            margin-top: 10px;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: var(--primary-hover);
+        }
+
+        button:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        button:disabled {
+            background-color: #94a3b8;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        #loadingMsg {
+            text-align: center;
+            color: var(--primary);
+            font-weight: 500;
+            display: none;
+            margin: 20px 0;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        #finishedSection {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        #finishedSection h3 {
+            color: var(--success);
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        
+        #finishedSection p {
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Task Validation</h2>
+
+    <div class="form-group" id="loginSection">
+        <label for="usernameSelect">Select Your Profile</label>
+        <select id="usernameSelect" onchange="startSession()">
+            <option value="">-- Choose Name --</option>
+            <option value="Player1">Player1</option>
+            <option value="Player2">Player2</option>
+            <option value="Player3">Player3</option>
+        </select>
+    </div>
+
+    <div id="loadingMsg">Loading your assigned tasks...</div>
+
+    <div id="playerSection" class="hidden">
+        <div class="status-text">
+            Reviewing video <strong style="color: var(--text-main);"><span id="currentCount">0</span> of <span id="totalCount">0</span></strong>
+        </div>
+        
+        <div class="video-container" id="videoContainer">
+            <iframe id="videoFrame" src="" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+        </div>
+
+        <div class="form-group">
+            <label for="judgement">Judgement</label>
+            <select id="judgement">
+                <option value="">-- Select an outcome --</option>
+                <option value="Correct">Correct</option>
+                <option value="Incorrect">Incorrect</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="notes">Notes (Optional)</label>
+            <textarea id="notes" placeholder="Add any specific context or timestamps here..."></textarea>
+        </div>
+
+        <button id="submitBtn" onclick="submitResult()">Submit Validation</button>
+    </div>
+
+    <div id="finishedSection" class="hidden">
+        <h3>All tasks completed</h3>
+        <p>Your validations have been successfully logged. You can close this window.</p>
+    </div>
+</div>
+
+<script>
+    // Embedded Deployed Google Apps Script Endpoint
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxaBa_Qx5s0YnJ5qfppOMfty9cRCBsiuX2L9EmRg_YjfnxNkEe6DPDGfP1vzD54RCSbUA/exec'; 
+    
+    let allAssignedVideos = []; 
+    let currentIndex = 0;
+    let currentUser = "";
+
+    async function startSession() {
+        const selectElement = document.getElementById("usernameSelect");
+        currentUser = selectElement.value;
+
+        if (!currentUser) return; 
+
+        selectElement.disabled = true;
+        document.getElementById("loadingMsg").style.display = "block";
+
+        try {
+            const response = await fetch(APPS_SCRIPT_URL);
+            const data = await response.json(); 
+            
+            allAssignedVideos = data.filter(row => row.username === currentUser);
+
+            document.getElementById("loadingMsg").style.display = "none";
+
+            if (allAssignedVideos.length > 0) {
+                document.getElementById("playerSection").classList.remove("hidden");
+                document.getElementById("totalCount").innerText = allAssignedVideos.length;
+                loadVideo(currentIndex);
+            } else {
+                alert("No videos assigned to this user.");
+                selectElement.disabled = false;
+            }
+
+        } catch (error) {
+            console.error("Error fetching data:", error);
+            alert("Failed to load data. Make sure your Apps Script URL is correct.");
+            selectElement.disabled = false;
+            document.getElementById("loadingMsg").style.display = "none";
+        }
+    }
+
+    function loadVideo(index) {
+        document.getElementById("currentCount").innerText = index + 1;
+        const videoData = allAssignedVideos[index];
+        const iframe = document.getElementById("videoFrame");
+
+        let embedUrl = "";
+        const rawUrl = (videoData.url || "").trim();
+        const platform = (videoData.platform || "").toLowerCase().trim();
+
+        // Armored fallback: Checks explicit text and domain string patterns to bypass sheet typos
+        if (rawUrl.includes("youtu") || platform === "youtube") {
+            const ytRegEx = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\/shorts\/)([^#\&\?]*).*/;
+            const match = rawUrl.match(ytRegEx);
+            
+            if (match && match[2].length === 11) {
+                const videoId = match[2];
+                // Switched to non-cookie privacy environment to lower embedding hurdles
+                embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}`;
+            } else {
+                console.error("Could not parse YouTube ID from:", rawUrl);
+                embedUrl = rawUrl;
+            }
+
+        } else if (platform === "instagram" || rawUrl.includes("instagram.com")) {
+            let cleanUrl = rawUrl.split('?')[0]; 
+            if (!cleanUrl.endsWith('/')) {
+                cleanUrl += '/';
+            }
+            embedUrl = `${cleanUrl}embed`; 
+            
+        } else if (platform === "tiktok" || rawUrl.includes("tiktok.com")) {
+            embedUrl = rawUrl; 
+        } else {
+            embedUrl = rawUrl; 
+        }
+
+        iframe.src = embedUrl;
+        document.getElementById("videoContainer").style.display = "block";
+        
+        document.getElementById("judgement").value = "";
+        document.getElementById("notes").value = "";
+    }
+
+    async function submitResult() {
+        const judgement = document.getElementById("judgement").value;
+        const notes = document.getElementById("notes").value;
+        const btn = document.getElementById("submitBtn");
+
+        if (!judgement) {
+            alert("Please select a judgement (Correct/Incorrect) before submitting.");
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = "Submitting...";
+
+        const currentVideo = allAssignedVideos[currentIndex];
+
+        const payload = {
+            username: currentUser,
+            url: currentVideo.url,
+            judgement: judgement,
+            notes: notes
+        };
+
+        try {
+            await fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors', 
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            currentIndex++;
+
+            if (currentIndex < allAssignedVideos.length) {
+                loadVideo(currentIndex);
+            } else {
+                document.getElementById("playerSection").classList.add("hidden");
+                document.getElementById("finishedSection").classList.remove("hidden");
+            }
+
+        } catch (error) {
+            console.error("Error submitting data:", error);
+            alert("There was an error saving your submission. Please try again.");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Submit Validation";
+        }
+    }
+</script>
+
+</body>
+</html>
