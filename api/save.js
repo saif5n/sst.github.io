@@ -6,15 +6,15 @@ const auth = new google.auth.GoogleAuth({
 });
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).send('Method not allowed');
+  if (req.method !== 'POST') return res.status(405).json({ message: 'Method not allowed' });
   
-  const sheets = google.sheets({ version: 'v4', auth });
   const { rowId, username, url, platform, judgement, notes } = req.body;
   const spreadsheetId = '170I3V2-Hl1KwTrnvIKtlpkxZeMvg8xXYKK2HjJtnnY0'; 
+  
+  const sheets = google.sheets({ version: 'v4', auth });
 
   try {
-    // 1. UPDATE: Mark the video as Reviewed/Skipped in the URLs sheet
-    // This ensures it no longer appears in the "Pending" list for the user
+    // 1. UPDATE URLs sheet (Mark as Reviewed/Skipped)
     await sheets.spreadsheets.values.update({
       spreadsheetId,
       range: `URLs!D${rowId}`, // Column D is Status
@@ -22,7 +22,7 @@ export default async function handler(req, res) {
       requestBody: { values: [[judgement]] }, 
     });
 
-    // 2. APPEND: Save the full record to the Submissions sheet
+    // 2. APPEND to Submissions sheet
     // Columns: Timestamp, Name, URL, Platform, Judgement, Notes
     await sheets.spreadsheets.values.append({
       spreadsheetId,
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
       valueInputOption: 'USER_ENTERED',
       requestBody: { 
         values: [[
-          new Date().toLocaleString(), // Timestamp
+          new Date().toISOString(), // Timestamp
           username, 
           url, 
           platform, 
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ success: true });
   } catch (error) {
-    console.error("Save Error:", error);
+    console.error("Critical Save Error:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 }

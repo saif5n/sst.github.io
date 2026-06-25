@@ -174,14 +174,14 @@ async function executeSave(judgement, notes) {
     const progressSection = document.getElementById("progressSection");
     progressSection.classList.remove("hidden");
     
-    document.getElementById("progressText").innerText = 
-        `Logging review ${currentIndex + 1} of ${allAssignedVideos.length}...`;
-
     const currentVideo = allAssignedVideos[currentIndex];
-
-    // FIX: Include the rowId so the server knows which row to update
+    
+    // We must send EVERYTHING the API needs to log the row and update the status
     const payload = {
-        rowId: currentVideo.id, 
+        rowId: currentVideo.id,
+        username: currentUser,
+        url: currentVideo.url,
+        platform: currentVideo.platform || "Unknown",
         judgement: judgement,
         notes: notes
     };
@@ -197,15 +197,12 @@ async function executeSave(judgement, notes) {
             moveNext();
         } else {
             const errorData = await response.json();
-            console.error("Server Error:", errorData);
-            alert("Submission failed to save. Error: " + (errorData.message || "Unknown error"));
+            alert("Save Failed: " + (errorData.message || "Unknown error"));
             progressSection.classList.add("hidden");
             document.getElementById("playerSection").classList.remove("hidden");
         }
-
     } catch (error) {
-        console.error("Transmission error:", error);
-        alert("Network error. Submission failed.");
+        alert("Transmission error. Check console.");
         progressSection.classList.add("hidden");
         document.getElementById("playerSection").classList.remove("hidden");
     }
