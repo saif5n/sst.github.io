@@ -14,23 +14,24 @@ export default async function handler(req, res) {
   const sheets = google.sheets({ version: 'v4', auth });
 
   try {
-    // 1. UPDATE URLs sheet (Mark as Reviewed/Skipped)
+    // 1. Update the 'URLs' sheet
+    // We target URLs!D${rowId} to only update the status column
     await sheets.spreadsheets.values.update({
       spreadsheetId,
-      range: `URLs!D${rowId}`, // Column D is Status
+      range: `URLs!D${rowId}`, 
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: [[judgement]] }, 
     });
 
-    // 2. APPEND to Submissions sheet
-    // Columns: Timestamp, Name, URL, Platform, Judgement, Notes
+    // 2. Append to the 'Submissions' sheet
+    // Using 'Submissions!A:F' forces it to look for that specific tab
     await sheets.spreadsheets.values.append({
       spreadsheetId,
-      range: 'Submissions!A:F',
+      range: 'Submissions!A:F', 
       valueInputOption: 'USER_ENTERED',
       requestBody: { 
         values: [[
-          new Date().toISOString(), // Timestamp
+          new Date().toLocaleString(), 
           username, 
           url, 
           platform, 
