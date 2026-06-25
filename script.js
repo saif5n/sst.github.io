@@ -20,15 +20,19 @@ document.addEventListener('keydown', function(event) {
 function initializeApplication() {
     const savedUser = localStorage.getItem("currentUser");
     const savedVideos = localStorage.getItem("assignedVideos");
+    const savedIndex = localStorage.getItem("currentIndex"); // Get the index
 
     if (savedUser && savedVideos) {
-        // Retrieve and convert the string back into an object/array
         currentUser = savedUser;
         allAssignedVideos = JSON.parse(savedVideos);
+        
+        // RESTORE THE INDEX
+        // Use parseInt because localStorage stores everything as a string
+        currentIndex = savedIndex ? parseInt(savedIndex) : 0; 
 
         document.getElementById("loginSection").classList.add("hidden");
         
-        if (allAssignedVideos.length > 0) {
+        if (currentIndex < allAssignedVideos.length) {
             document.getElementById("playerSection").classList.remove("hidden");
             document.getElementById("totalCount").innerText = allAssignedVideos.length;
             loadVideo(currentIndex);
@@ -232,19 +236,21 @@ async function executeSave(judgement, notes) {
 
 function moveNext() {
     currentIndex++;
-    const progressSection = document.getElementById("progressSection");
+    
+    // SAVE THE PROGRESS
+    localStorage.setItem("currentIndex", currentIndex);
 
+    const progressSection = document.getElementById("progressSection");
     setTimeout(() => {
         progressSection.classList.add("hidden");
         if (currentIndex < allAssignedVideos.length) {
             document.getElementById("playerSection").classList.remove("hidden");
             loadVideo(currentIndex);
         } else {
-            // YOU FINISHED EVERYTHING!
             document.getElementById("finishedSection").classList.remove("hidden");
-            
-            // CLEAR THE CACHE so next time they refresh, it's empty
-            localStorage.removeItem("assignedVideos"); 
+            // Clear storage when finished
+            localStorage.removeItem("assignedVideos");
+            localStorage.removeItem("currentIndex"); // Add this
         }
     }, 300); 
 }
