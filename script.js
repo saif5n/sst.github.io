@@ -240,7 +240,11 @@ function moveNext() {
             document.getElementById("playerSection").classList.remove("hidden");
             loadVideo(currentIndex);
         } else {
+            // YOU FINISHED EVERYTHING!
             document.getElementById("finishedSection").classList.remove("hidden");
+            
+            // CLEAR THE CACHE so next time they refresh, it's empty
+            localStorage.removeItem("assignedVideos"); 
         }
     }, 300); 
 }
