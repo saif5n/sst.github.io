@@ -1,5 +1,4 @@
-// Embedded Deployed Google Apps Script Endpoint
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw8GqgEhcnHmDRckY3DmftbPC0QzhfhRJ8yK1PGfyrbUjTCU786Y0052jg315y0HvGFQQ/exec'; 
+// Removed APPS_SCRIPT_URL. Vercel automatically routes relative '/api/...' paths.
 
 let allAssignedVideos = []; 
 let currentIndex = 0;
@@ -42,11 +41,17 @@ async function attemptLogin() {
     loginError.classList.add("hidden");
 
     try {
-        // Send login credentials to the backend
-        const response = await fetch(APPS_SCRIPT_URL + "?action=login&uid=" + encodeURIComponent(uid) + "&password=" + encodeURIComponent(password));
+        // UPDATED: Now points to the Vercel serverless login function
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            // Sending credentials in the body of a POST request is much more secure
+            body: JSON.stringify({ uid: uid, password: password })
+        });
+        
         const result = await response.json();
 
-        if (result.success) {
+        if (response.ok && result.success) {
             currentUser = result.username;
             allAssignedVideos = result.assignedVideos;
 
@@ -173,7 +178,6 @@ async function executeSave(judgement, notes) {
 
     const currentVideo = allAssignedVideos[currentIndex];
     const payload = {
-        action: 'submit', // Explicitly tell backend this is a submission
         username: currentUser,
         url: currentVideo.url,
         platform: currentVideo.platform || "", 
@@ -183,18 +187,27 @@ async function executeSave(judgement, notes) {
     };
 
     try {
-        await fetch(APPS_SCRIPT_URL, {
+        // UPDATED: Now points to the Vercel save function 
+        // mode: 'no-cors' is completely removed so we can actually read success/failure responses!
+        const response = await fetch('/api/save', {
             method: 'POST',
-            mode: 'no-cors', 
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
 
-        moveNext();
+        if (response.ok) {
+            moveNext();
+        } else {
+            const errorData = await response.json();
+            console.error("Server Error:", errorData);
+            alert("Submission failed to save. Check console for details.");
+            progressSection.classList.add("hidden");
+            document.getElementById("playerSection").classList.remove("hidden");
+        }
 
     } catch (error) {
         console.error("Transmission error:", error);
-        alert("Submission failed to save.");
+        alert("Network error. Submission failed.");
         progressSection.classList.add("hidden");
         document.getElementById("playerSection").classList.remove("hidden");
     }
