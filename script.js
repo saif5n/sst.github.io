@@ -143,10 +143,18 @@ async function attemptLogin() {
 }
 
 function loadVideo(index) {
-    // UPDATED: This ensures the top bar (e.g., "Reviewing 2 of 966") updates immediately
     document.getElementById("currentCount").innerText = index + 1;
-    document.getElementById("totalCount").innerText = allAssignedVideos.length; // Safeguard line
+    document.getElementById("totalCount").innerText = allAssignedVideos.length; 
 
+    // --- NEW ETA CALCULATION BLOCK ---
+    let totalRemainingSeconds = 0;
+    // Loop starts at the CURRENT index, so it only adds up unreviewed videos
+    for (let i = index; i < allAssignedVideos.length; i++) {
+        totalRemainingSeconds += parseDurationToSeconds(allAssignedVideos[i].duration);
+    }
+    document.getElementById("etaDisplay").innerText = `ETA: ${formatSecondsToETA(totalRemainingSeconds)}`;
+    // ---------------------------------
+    
     const videoData = allAssignedVideos[index];
     const iframe = document.getElementById("videoFrame");
     const directLink = document.getElementById("directOpenLink");
@@ -346,4 +354,28 @@ async function fetchAssignedVideos(uid, showLoading = true) {
         alert("Sync failed: " + err.message);
         document.getElementById("loadingMsg").classList.add("hidden");
     }
+}
+
+function parseDurationToSeconds(durationStr) {
+    if (!durationStr) return 0;
+    const parts = String(durationStr).trim().split(':').map(Number);
+    if (parts.some(isNaN)) return 0;
+    
+    if (parts.length === 2) {
+        return (parts[0] * 60) + parts[1];
+    } else if (parts.length === 3) {
+        return (parts[0] * 3600) + (parts[1] * 60) + parts[2];
+    }
+    return 0;
+}
+
+function formatSecondsToETA(totalSeconds) {
+    if (totalSeconds <= 0) return "0m";
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.ceil((totalSeconds % 3600) / 60); 
+    
+    if (hours > 0) {
+        return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+    }
+    return `${minutes}m`;
 }

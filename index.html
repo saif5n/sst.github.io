@@ -23,32 +23,36 @@
     </div>
 
     <div id="loginSection">
-    <div class="input-group">
-        <label for="uidInput">
-            In-game UID
-            <span class="tooltip-icon" data-tooltip="The numeric user identification of your PUBG MOBILE account.">i</span>
-        </label>
-        <input type="text" id="uidInput" autocomplete="off" />
-    </div>
+        <div class="input-group">
+            <label for="uidInput">
+                In-game UID
+                <span class="tooltip-icon" data-tooltip="The numeric user identification of your PUBG MOBILE account.">i</span>
+            </label>
+            <input type="text" id="uidInput" autocomplete="off" />
+        </div>
 
-    <div class="input-group">
-        <label for="passwordInput">
-            Password
-            <span class="tooltip-icon" data-tooltip="The 4-digit password that you have been provided by the Survey Team Discord app.">i</span>
-        </label>
-        <input type="password" id="passwordInput" autocomplete="off" />
-    </div>
-    
-    <div id="loginError" class="error-message hidden"></div>
+        <div class="input-group">
+            <label for="passwordInput">
+                Password
+                <span class="tooltip-icon" data-tooltip="The 4-digit password that you have been provided by the Survey Team Discord app.">i</span>
+            </label>
+            <input type="password" id="passwordInput" autocomplete="off" />
+        </div>
+        
+        <div id="loginError" class="error-message hidden"></div>
 
-    <button id="loginBtn" onclick="attemptLogin()">Log In</button>
-</div>
+        <button id="loginBtn" onclick="attemptLogin()">Log In</button>
+    </div>
 
     <div id="playerSection" class="hidden">
-        <div class="status-wrapper">
+        <div class="counter-header">
+            <span id="etaDisplay" data-tooltip="The displayed time is an estimated completion time and may not be entirely accurate.">ETA: --</span>
             <div class="status-text">
                 Reviewing <strong style="color: var(--text-main);"><span id="currentCount">0</span> of <span id="totalCount">0</span></strong>
             </div>
+        </div>
+
+        <div class="status-wrapper" style="margin-top: 10px; border-top: none; padding-top: 0;">
             <button id="refreshBtn" class="refresh-btn" onclick="fetchAssignedVideos(currentUid)" title="Check for new assignments">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="23 4 23 10 17 10"></polyline>

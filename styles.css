@@ -431,3 +431,74 @@ button:disabled {
     25% { transform: translateX(-4px); }
     75% { transform: translateX(4px); }
 }
+
+/* Container Alignment */
+.counter-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; 
+    background: #1e1e24;            
+    padding: 10px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #2e2e38;
+}
+
+/* ETA Badge Styling */
+#etaDisplay {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #a1a1aa;                
+    background-color: #27272a;     
+    padding: 4px 10px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+    cursor: help; 
+}
+
+/* Active Blue Dot Indicator */
+#etaDisplay::before {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background-color: #3b82f6;     
+    border-radius: 50%;
+    box-shadow: 0 0 8px #3b82f6;
+}
+
+/* Hover Tooltip Information Box */
+#etaDisplay::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 135%;              
+    left: 50%;
+    transform: translateX(-50%) scale(0.95);
+    background-color: #18181b; 
+    color: #e4e4e7;            
+    border: 1px solid #3f3f46;  
+    padding: 8px 12px;
+    border-radius: 6px;
+    width: 240px;              
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    font-size: 0.75rem;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: normal;
+    text-align: center;
+    line-height: 1.4;
+    opacity: 0;
+    pointer-events: none;      
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 50;               
+}
+
+#etaDisplay:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+}

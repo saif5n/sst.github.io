@@ -32,25 +32,19 @@ export default async function handler(req, res) {
 
     console.log("Looking for Name:", targetName);
     
-    // 3. Filter the data based on the new column layout
     const assignedVideos = allRows
       .map((row, index) => ({ rowData: row, id: index + 1 }))
       .filter(item => {
           const row = item.rowData;
-          // Column A: Name (index 0)
-          // Column B: URL (index 1)
-          // Column D: Platform (index 3)
-          // Column E: Status (index 4)
-          
           const nameInSheet = String(row[0] || "").trim();
-          const statusInSheet = String(row[4] || "").trim().toLowerCase(); // Now checking index 4
-
+          const statusInSheet = String(row[4] || "").trim().toLowerCase(); // Column E
           return nameInSheet === targetName && statusInSheet === 'pending';
       })
       .map(item => ({
         id: item.id,
-        url: item.rowData[1],     // Column B
-        platform: item.rowData[3] // Column D
+        url: item.rowData[1],        // Column B
+        duration: item.rowData[2],   // Column C - ADD THIS
+        platform: item.rowData[3]    // Column D
       }));
 
     return res.status(200).json({ success: true, username: targetName, assignedVideos });

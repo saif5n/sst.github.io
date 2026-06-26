@@ -29,9 +29,9 @@ export default async function handler(req, res) {
       return res.status(404).json({ success: false, message: "UID not found in the database." });
     }
 
-    const userName = userRow[0]; // Gets the name (e.g., "Faysal")
+    const userName = userRow[0]; 
 
-    // STEP 2: Fetch URLs assigned to this Name
+    // STEP 2: Fetch the URLs sheet to get assigned videos
     const urlResponse = await sheets.spreadsheets.values.get({
       spreadsheetId,
       range: 'URLs!A2:E', 
@@ -39,14 +39,14 @@ export default async function handler(req, res) {
 
     const rows = urlResponse.data.values || [];
     
-    // Filter for rows assigned to the Name where status is not "Reviewed" or "Skipped"
     const assignedVideos = rows
       .map((row, index) => ({ 
           id: index + 2, 
-          assignedTo: row[0], // Column A (Index 0): Name
-          url: row[1],        // Column B (Index 1): URL
-          platform: row[3],   // Column D (Index 3): Platform
-          status: row[4]      // Column E (Index 4): Status
+          assignedTo: row[0], // Column A
+          url: row[1],        // Column B
+          duration: row[2],   // Column C - ADD THIS
+          platform: row[3],   // Column D
+          status: row[4]      // Column E
       }))
       .filter(row => row.assignedTo === userName && row.status !== 'Reviewed' && row.status !== 'Skipped');
 
