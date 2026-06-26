@@ -33,9 +33,11 @@ function initializeApplication() {
         if (currentIndex >= allAssignedVideos.length || allAssignedVideos.length === 0) {
             localStorage.clear();
             document.getElementById("loginSection").classList.remove("hidden");
+            document.getElementById("characterDisplay").classList.remove("hidden");
             document.getElementById("finishedSection").classList.add("hidden");
         } else {
             document.getElementById("loginSection").classList.add("hidden");
+            document.getElementById("characterDisplay").classList.add("hidden");
             document.getElementById("playerSection").classList.remove("hidden");
             document.getElementById("totalCount").innerText = allAssignedVideos.length;
             loadVideo(currentIndex);
@@ -43,6 +45,7 @@ function initializeApplication() {
     } else {
         localStorage.clear();
         document.getElementById("loginSection").classList.remove("hidden");
+        document.getElementById("characterDisplay").classList.remove("hidden");
     }
     
     document.getElementById("loadingMsg").classList.add("hidden");
@@ -55,14 +58,23 @@ async function attemptLogin() {
     const loginBtn = document.getElementById("loginBtn");
 
     if (!uid || !password) {
-        loginError.innerText = "Please enter both UID and Password.";
-        loginError.classList.remove("hidden");
+        if (loginError) {
+            loginError.innerText = "Please enter both UID and Password.";
+            loginError.classList.remove("hidden");
+        } else {
+            alert("Please enter both UID and Password.");
+        }
         return;
     }
 
     loginBtn.innerText = "Verifying...";
     loginBtn.disabled = true;
-    loginError.classList.add("hidden");
+    if (loginError) loginError.classList.add("hidden");
+
+    // 1. Show loading screen, hide the login section and the character image
+    document.getElementById("loadingMsg").classList.remove("hidden");
+    document.getElementById("loginSection").classList.add("hidden");
+    document.getElementById("characterDisplay").classList.add("hidden");
 
     try {
         const response = await fetch('/api/login', {
@@ -73,13 +85,14 @@ async function attemptLogin() {
         
         const result = await response.json();
 
+        // 2. Hide the loading screen once the server responds
+        document.getElementById("loadingMsg").classList.add("hidden");
+
         if (response.ok && result.success) {
             currentUser = result.username;
             currentUid = uid; // Save the 10-digit ID used to log in
             allAssignedVideos = result.assignedVideos;
             currentIndex = 0;
-
-            document.getElementById("loginSection").classList.add("hidden");
             
             if (allAssignedVideos.length > 0) {
                 // Save complete active session properties
@@ -97,16 +110,34 @@ async function attemptLogin() {
                 document.getElementById("finishedSection").classList.remove("hidden");
             }
         } else {
-            loginError.innerText = result.message || "Invalid UID or Password.";
-            loginError.classList.remove("hidden");
-            loginBtn.innerText = "Login";
+            // 3. If login fails, bring the character and form back
+            document.getElementById("loginSection").classList.remove("hidden");
+            document.getElementById("characterDisplay").classList.remove("hidden");
+            
+            if (loginError) {
+                loginError.innerText = result.message || "Invalid UID or Password.";
+                loginError.classList.remove("hidden");
+            } else {
+                alert(result.message || "Invalid UID or Password.");
+            }
+            loginBtn.innerText = "Log In";
             loginBtn.disabled = false;
         }
     } catch (error) {
         console.error("Login error details:", error);
-        loginError.innerText = "Error: " + error.message; 
-        loginError.classList.remove("hidden");
-        loginBtn.innerText = "Login";
+        
+        // 4. Catch network crashes and bring the form and character back
+        document.getElementById("loadingMsg").classList.add("hidden");
+        document.getElementById("loginSection").classList.remove("hidden");
+        document.getElementById("characterDisplay").classList.remove("hidden");
+
+        if (loginError) {
+            loginError.innerText = "Error: " + error.message; 
+            loginError.classList.remove("hidden");
+        } else {
+            alert("Error: " + error.message);
+        }
+        loginBtn.innerText = "Log In";
         loginBtn.disabled = false;
     }
 }
