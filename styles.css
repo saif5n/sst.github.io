@@ -198,6 +198,41 @@ h2 {
     transform: rotate(180deg);
 }
 
+@media (max-width: 640px) {
+    .status-bar {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 12px;
+    }
+
+    .status-bar-progress,
+    .status-bar-right {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .status-bar-progress {
+        align-items: baseline;
+        gap: 4px;
+    }
+
+    .status-bar-right {
+        align-items: center;
+        margin-top: 4px;
+    }
+
+    .refresh-btn {
+        flex: 0 0 auto;
+        width: auto;
+        white-space: normal;
+        padding: 10px 14px;
+        justify-content: center;
+    }
+}
+
 /* ── Platform/fallback link ── */
 .fallback-link-container {
     text-align: center;

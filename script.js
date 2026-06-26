@@ -178,19 +178,16 @@ function loadVideo(index) {
         if (!cleanUrl.endsWith('/')) { cleanUrl += '/'; }
         embedUrl = `${cleanUrl}embed`; 
     } else if (platform === "tiktok" || rawUrl.includes("tiktok.com")) {
-        const tiktokRegEx = /\/video\/(\d+)/;
-        const match = rawUrl.match(tiktokRegEx);
-        if (match && match[1]) {
-            embedUrl = `https://www.tiktok.com/embed/v2/${match[1]}`;
-        } else {
-            embedUrl = rawUrl; 
-        }
+        // TikTok blocks being displayed inside a custom iframe on most sites.
+        // Use the direct link instead and hide the embedded frame.
+        embedUrl = rawUrl;
+        iframe.src = "";
+        document.getElementById("videoContainer").style.display = "none";
     } else {
         embedUrl = rawUrl; 
+        iframe.src = embedUrl;
+        document.getElementById("videoContainer").style.display = "block";
     }
-
-    iframe.src = embedUrl;
-    document.getElementById("videoContainer").style.display = "block";
     
     document.getElementById("judgement").value = "";
     document.getElementById("notes").value = "";
