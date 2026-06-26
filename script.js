@@ -183,10 +183,9 @@ async function loadVideo(index) {
         let embedHtml = null;
 
         if (isTikTokShortUrl(rawUrl)) {
-            embedHtml = await getTikTokOEmbedHtml(rawUrl);
-            if (!embedHtml) {
-                finalTikTokUrl = await resolveTikTokShortUrl(rawUrl);
-            }
+            const resolved = await resolveTikTokShortUrl(rawUrl);
+            finalTikTokUrl = resolved.url || rawUrl;
+            embedHtml = resolved.html;
         }
 
         const tiktokId = getTikTokVideoId(finalTikTokUrl);
@@ -246,29 +245,21 @@ async function getTikTokOEmbedHtml(rawUrl) {
 }
 
 async function resolveTikTokShortUrl(shortUrl) {
-    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(shortUrl)}`;
     try {
-        const response = await fetch(proxyUrl);
-        const html = await response.text();
-
-        const metaMatch = html.match(/<meta[^>]+property=["']og:url["'][^>]+content=["']([^"']+)["']/i);
-        if (metaMatch && metaMatch[1]) {
-            return metaMatch[1];
+        const response = await fetch(`/api/resolve-tiktok?url=${encodeURIComponent(shortUrl)}`);
+        if (!response.ok) {
+            return { url: shortUrl, html: null };
         }
 
-        const canonicalMatch = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i);
-        if (canonicalMatch && canonicalMatch[1]) {
-            return canonicalMatch[1];
-        }
-
-        const redirectMatch = html.match(/href=["'](https?:\/\/www\.tiktok\.com\/[^"']+)["']/i);
-        if (redirectMatch && redirectMatch[1]) {
-            return redirectMatch[1];
-        }
+        const json = await response.json();
+        return {
+            url: json.url || shortUrl,
+            html: json.html || null
+        };
     } catch (error) {
         console.warn('TikTok short URL resolution failed:', error);
+        return { url: shortUrl, html: null };
     }
-    return shortUrl;
 }
 
 function hideVideoFrames() {
