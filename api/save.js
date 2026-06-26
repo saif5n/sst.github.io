@@ -43,24 +43,54 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // STEP 3: APPEND to Submissions sheet (Only if NOT skipped)
+    // STEP 3: APPEND/UPDATE Submissions sheet (Only if NOT skipped)
     if (!isSkipped) {
-      await sheets.spreadsheets.values.append({
+      // Fetch name and link columns (B:C) from Submissions to try matching
+      // by video link (Column C) or reviewer name (Column B).
+      const submissionsResponse = await sheets.spreadsheets.values.get({
         spreadsheetId,
-        range: 'Submissions!A:G', // Updated range to include up to Column G
-        valueInputOption: 'USER_ENTERED',
-        requestBody: { 
-          values: [[
-            new Date().toLocaleString(), // Column A
-            username,                    // Column B
-            url,                         // Column C
-            duration,                    // Column D (New!)
-            platform,                    // Column E (Shifted)
-            judgement,                   // Column F (Shifted)
-            notes                        // Column G (Shifted)
-          ]] 
-        },
+        range: 'Submissions!B:C'
       });
+
+      const submissionRows = submissionsResponse.data.values || [];
+      let existingRowIndex = -1;
+      for (let i = 0; i < submissionRows.length; i++) {
+        const nameCell = String(submissionRows[i][0] || "").trim(); // Column B
+        const linkCell = String(submissionRows[i][1] || "").trim(); // Column C
+        // Require both link and reviewer name to match to consider this the same submission
+        if (linkCell === String(url).trim() && nameCell === String(username).trim()) {
+          existingRowIndex = i + 1;
+          break;
+        }
+      }
+
+      const newRow = [[
+        new Date().toLocaleString(),
+        username,
+        url,
+        duration,
+        platform,
+        judgement,
+        notes,
+        rowId
+      ]];
+
+      if (existingRowIndex > 0) {
+        await sheets.spreadsheets.values.update({
+          spreadsheetId,
+          range: `Submissions!A${existingRowIndex}:H${existingRowIndex}`,
+          valueInputOption: 'USER_ENTERED',
+          requestBody: { values: newRow }
+        });
+      } else {
+        await sheets.spreadsheets.values.append({
+          spreadsheetId,
+          range: 'Submissions!A:H',
+          valueInputOption: 'USER_ENTERED',
+          insertDataOption: 'INSERT_ROWS',
+          requestBody: { values: newRow }
+        });
+      }
     }
 
     return res.status(200).json({ success: true });

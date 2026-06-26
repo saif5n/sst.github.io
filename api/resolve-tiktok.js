@@ -16,9 +16,14 @@ module.exports = async function handler(req, res) {
       validateStatus: status => status >= 200 && status < 400,
     });
 
-    const finalUrl = response.request?.res?.responseUrl || response.config.url || requestedUrl;
+    const finalUrl = response.request?.res?.responseUrl
+      || response.request?._redirectable?._currentUrl
+      || response.request?.path
+      || response.config.url
+      || requestedUrl;
     let html = null;
-    if (response.headers['content-type'] && response.headers['content-type'].includes('text/html')) {
+    const contentType = response.headers['content-type'] || '';
+    if (contentType.includes('text/html')) {
       html = response.data;
     }
 

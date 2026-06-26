@@ -3,6 +3,7 @@ let allAssignedVideos = [];
 let currentIndex = 0;
 let currentUser = "";
 let currentUid = ""; // Tracks the 10-digit database look-up key
+let videoDrafts = {};
 
 window.addEventListener('DOMContentLoaded', initializeApplication);
 
@@ -33,9 +34,11 @@ function initializeApplication() {
             { id: 2, url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", platform: "youtube", duration: "00:30" }
         ];
 
+        videoDrafts = {};
         localStorage.setItem("currentUser", currentUser);
         localStorage.setItem("currentUid", currentUid);
         localStorage.setItem("assignedVideos", JSON.stringify(allAssignedVideos));
+        localStorage.setItem("videoDrafts", JSON.stringify(videoDrafts));
         localStorage.setItem("currentIndex", currentIndex);
 
         document.getElementById("loginSection").classList.add("hidden");
@@ -47,6 +50,7 @@ function initializeApplication() {
         currentUser = savedUser;
         currentUid = savedUid;
         allAssignedVideos = JSON.parse(savedVideos);
+        videoDrafts = JSON.parse(localStorage.getItem("videoDrafts") || "{}");
         currentIndex = savedIndex ? parseInt(savedIndex) : 0; 
 
         // AUTO-LOGOUT GATEKEEPER:
@@ -114,12 +118,14 @@ async function attemptLogin() {
             currentUid = uid; // Save the 10-digit ID used to log in
             allAssignedVideos = result.assignedVideos;
             currentIndex = 0;
+            videoDrafts = {};
             
             if (allAssignedVideos.length > 0) {
-                // Save complete active session properties
+                        // Save complete active session properties
                 localStorage.setItem("currentUser", currentUser);
                 localStorage.setItem("currentUid", currentUid);
                 localStorage.setItem("assignedVideos", JSON.stringify(allAssignedVideos));
+                localStorage.setItem("videoDrafts", JSON.stringify(videoDrafts));
                 localStorage.setItem("currentIndex", currentIndex);
 
                 document.getElementById("playerSection").classList.remove("hidden");
@@ -182,7 +188,7 @@ async function loadVideo(index) {
     const prevButton = document.getElementById("prevVideoBtn");
 
     let embedUrl = "";
-    const rawUrl = (videoData.url || "").trim();
+    const rawUrl = normalizeUrl((videoData.url || "").trim());
     const platform = (videoData.platform || "").toLowerCase().trim();
 
     platformLabel.textContent = formatPlatformName(platform);
@@ -234,16 +240,14 @@ async function loadVideo(index) {
         hideVideoFrames();
     }
     
-    const savedJudgement = videoData.judgement || "";
-    const savedNotes = videoData.notes || "";
-    const savedSkipReason = videoData.skipReason || "";
-
-    document.getElementById("judgement").value = savedJudgement;
-    document.getElementById("notes").value = savedNotes;
+    const draftKey = getVideoDraftKey(videoData);
+    const draft = videoDrafts[draftKey] || {};
+    document.getElementById("judgement").value = draft.judgement || "";
+    document.getElementById("notes").value = draft.notes || "";
 
     const skipSection = document.getElementById("skipReasonSection");
     const skipReasonInput = document.getElementById("skipReason");
-    skipReasonInput.value = savedSkipReason;
+    skipReasonInput.value = draft.skipReason || "";
     if (savedSkipReason) {
         skipSection.classList.remove("hidden");
     } else {
@@ -251,20 +255,26 @@ async function loadVideo(index) {
     }
 }
 
+function persistDrafts() {
+    localStorage.setItem("videoDrafts", JSON.stringify(videoDrafts));
+}
+
 function saveCurrentVideoState() {
     const currentVideo = allAssignedVideos[currentIndex];
     if (!currentVideo) return;
 
-    currentVideo.judgement = document.getElementById("judgement").value;
-    currentVideo.notes = document.getElementById("notes").value;
-    const skipReason = document.getElementById("skipReason").value;
-    if (skipReason) {
-        currentVideo.skipReason = skipReason;
-    } else {
-        delete currentVideo.skipReason;
-    }
+    const draftKey = getVideoDraftKey(currentVideo);
+    videoDrafts[draftKey] = {
+        judgement: document.getElementById("judgement").value,
+        notes: document.getElementById("notes").value,
+        skipReason: document.getElementById("skipReason").value || ""
+    };
 
-    localStorage.setItem("assignedVideos", JSON.stringify(allAssignedVideos));
+    persistDrafts();
+}
+
+function getVideoDraftKey(videoData) {
+    return String(videoData.id ?? videoData.url ?? currentIndex);
 }
 
 function getTikTokVideoId(url) {
@@ -364,7 +374,6 @@ function renderTikTokEmbed(rawUrl, tiktokId) {
 
 function goToPreviousVideo() {
     if (currentIndex > 0) {
-        saveCurrentVideoState();
         currentIndex -= 1;
         localStorage.setItem("currentIndex", currentIndex);
         loadVideo(currentIndex);
@@ -391,9 +400,15 @@ function renderTikTokEmbedHtml(embedHtml, rawUrl) {
     script.async = true;
     wrapper.appendChild(script);
 
-    appendTikTokFallback(wrapper, rawUrl);
-
     document.getElementById("videoContainer").style.display = "block";
+}
+
+function normalizeUrl(raw) {
+    const markdownLinkMatch = raw.match(/\[([^\]]+)\]\((https?:\/\/[^")]+)\)/i);
+    if (markdownLinkMatch && markdownLinkMatch[2]) {
+        return markdownLinkMatch[2].trim();
+    }
+    return raw;
 }
 
 function formatPlatformName(rawPlatform) {
@@ -532,9 +547,11 @@ async function fetchAssignedVideos(uid, showLoading = true) {
             
             if (allAssignedVideos.length > 0) {
                 // Re-establish session values to protect against page refreshes
+                videoDrafts = {};
                 localStorage.setItem("currentUser", currentUser);
                 localStorage.setItem("currentUid", currentUid);
                 localStorage.setItem("assignedVideos", JSON.stringify(allAssignedVideos));
+                localStorage.setItem("videoDrafts", JSON.stringify(videoDrafts));
                 
                 currentIndex = 0;
                 localStorage.setItem("currentIndex", currentIndex);
