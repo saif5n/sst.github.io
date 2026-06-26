@@ -180,11 +180,21 @@ async function loadVideo(index) {
         embedUrl = `${cleanUrl}embed`; 
     } else if (platform === "tiktok" || rawUrl.includes("tiktok.com")) {
         let finalTikTokUrl = rawUrl;
+        let embedHtml = null;
+
         if (isTikTokShortUrl(rawUrl)) {
-            finalTikTokUrl = await resolveTikTokShortUrl(rawUrl);
+            embedHtml = await getTikTokOEmbedHtml(rawUrl);
+            if (!embedHtml) {
+                finalTikTokUrl = await resolveTikTokShortUrl(rawUrl);
+            }
         }
+
         const tiktokId = getTikTokVideoId(finalTikTokUrl);
-        renderTikTokEmbed(finalTikTokUrl, tiktokId);
+        if (embedHtml) {
+            renderTikTokEmbedHtml(embedHtml);
+        } else {
+            renderTikTokEmbed(finalTikTokUrl, tiktokId);
+        }
         embedUrl = "";
     } else {
         embedUrl = rawUrl; 
@@ -221,10 +231,24 @@ function isTikTokShortUrl(url) {
 }
 
 async function resolveTikTokShortUrl(shortUrl) {
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(shortUrl)}`;
     try {
-        const response = await fetch(shortUrl, { method: 'GET', redirect: 'follow' });
-        if (response && response.url) {
-            return response.url;
+        const response = await fetch(proxyUrl);
+        const html = await response.text();
+
+        const metaMatch = html.match(/<meta[^>]+property=["']og:url["'][^>]+content=["']([^"']+)["']/i);
+        if (metaMatch && metaMatch[1]) {
+            return metaMatch[1];
+        }
+
+        const canonicalMatch = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i);
+        if (canonicalMatch && canonicalMatch[1]) {
+            return canonicalMatch[1];
+        }
+
+        const redirectMatch = html.match(/href=["'](https?:\\/\\/www\.tiktok\.com\\/[^"']+)["']/i);
+        if (redirectMatch && redirectMatch[1]) {
+            return redirectMatch[1];
         }
     } catch (error) {
         console.warn('TikTok short URL resolution failed:', error);
@@ -266,6 +290,56 @@ function renderTikTokEmbed(rawUrl, tiktokId) {
     section.appendChild(anchor);
     blockquote.appendChild(section);
     wrapper.appendChild(blockquote);
+
+    const existing = document.getElementById("tiktokEmbedScript");
+    if (existing) {
+        existing.remove();
+    }
+
+    const script = document.createElement("script");
+    script.id = "tiktokEmbedScript";
+    script.src = "https://www.tiktok.com/embed.js";
+    script.async = true;
+    wrapper.appendChild(script);
+
+    appendTikTokFallbackButton(wrapper, rawUrl);
+    document.getElementById("videoContainer").style.display = "block";
+}
+
+function renderTikTokFallback(rawUrl) {
+    const wrapper = document.getElementById("tiktokEmbedWrapper");
+    wrapper.style.display = "flex";
+    wrapper.innerHTML = "";
+
+    const message = document.createElement("div");
+    message.textContent = "TikTok video failed to embed. Open directly instead:";
+    message.style.color = "var(--text-muted)";
+    message.style.textAlign = "center";
+    message.style.marginBottom = "12px";
+    wrapper.appendChild(message);
+
+    appendTikTokFallbackButton(wrapper, rawUrl);
+
+    document.getElementById("videoContainer").style.display = "block";
+}
+
+function appendTikTokFallbackButton(wrapper, rawUrl) {
+    const fallbackLink = document.createElement("a");
+    fallbackLink.href = rawUrl;
+    fallbackLink.target = "_blank";
+    fallbackLink.rel = "noreferrer noopener";
+    fallbackLink.className = "tiktok-fallback-button";
+    fallbackLink.innerHTML = `Open directly <span>↗</span>`;
+    wrapper.appendChild(fallbackLink);
+}
+
+function renderTikTokEmbedHtml(embedHtml) {
+    const iframe = document.getElementById("videoFrame");
+    const wrapper = document.getElementById("tiktokEmbedWrapper");
+    iframe.style.display = "none";
+    iframe.src = "";
+    wrapper.style.display = "block";
+    wrapper.innerHTML = embedHtml;
 
     const existing = document.getElementById("tiktokEmbedScript");
     if (existing) {
