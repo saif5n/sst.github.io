@@ -348,6 +348,25 @@ iframe {
     display: block;
 }
 
+.video-panel,
+.judgement-panel {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    border-radius: 20px;
+    background: rgba(15, 23, 42, 0.98);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    box-shadow: 0 18px 35px rgba(0, 0, 0, 0.12);
+}
+
+.video-panel {
+    padding: 18px;
+}
+
+.judgement-panel {
+    padding: 24px;
+}
+
 .player-grid {
     display: block;
     width: 100%;
@@ -362,12 +381,17 @@ iframe {
 @media (min-width: 641px) {
     .player-grid {
         display: grid;
-        grid-template-columns: minmax(360px, 2fr) minmax(300px, 1fr);
-        gap: 24px;
+        grid-template-columns: minmax(360px, 2fr) minmax(320px, 1fr);
+        gap: 28px;
         align-items: start;
     }
 
     .player-grid > * {
+        min-width: 0;
+    }
+
+    .player-panel,
+    .judgement-panel {
         min-width: 0;
     }
 
@@ -381,11 +405,10 @@ iframe {
         display: flex;
         flex-direction: column;
         gap: 20px;
-        background: rgba(15, 23, 42, 0.98);
-        border: 1px solid rgba(148, 163, 184, 0.18);
-        border-radius: 18px;
-        padding: 24px;
-        box-shadow: 0 24px 50px rgba(0, 0, 0, 0.18);
+        background: transparent;
+        border: none;
+        padding: 0;
+        box-shadow: none;
     }
 
     .player-controls .form-group,
