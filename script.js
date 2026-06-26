@@ -151,7 +151,8 @@ function loadVideo(index) {
     for (let i = index; i < allAssignedVideos.length; i++) {
         totalRemainingSeconds += parseDurationToSeconds(allAssignedVideos[i].duration);
     }
-    document.getElementById("etaDisplay").innerText = `ETA: ${formatSecondsToETA(totalRemainingSeconds)}`;
+    document.getElementById("etaDisplay").innerText = formatSecondsToETA(totalRemainingSeconds);
+    document.getElementById("topInfo").classList.remove("hidden");
 
     const videoData = allAssignedVideos[index];
     const iframe = document.getElementById("videoFrame");
@@ -189,8 +190,8 @@ function loadVideo(index) {
     }
 
     if (embedUrl) {
-        iframe.src = embedUrl;
         iframe.style.display = "block";
+        iframe.src = embedUrl;
         document.getElementById("videoContainer").style.display = "block";
     } else {
         iframe.src = "";

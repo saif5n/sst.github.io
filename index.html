@@ -9,6 +9,24 @@
 </head>
 <body>
 
+<div id="topInfo" class="top-info-modal hidden">
+    <div class="top-info-meta">
+        <span class="top-info-label">Reviewed</span>
+        <span class="top-info-value"><span id="currentCount">0</span> / <span id="totalCount">0</span></span>
+    </div>
+    <div class="top-info-meta">
+        <span class="top-info-label">ETA</span>
+        <span id="etaDisplay" data-tooltip="The displayed time is an estimated completion time and may not be entirely accurate.">--</span>
+    </div>
+    <button id="refreshBtn" class="refresh-btn top-refresh" onclick="fetchAssignedVideos(currentUid)" title="Check for new assignments">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+        </svg>
+        Refresh
+    </button>
+</div>
+
 <div class="container">
     <h2>Content Review</h2>
 
@@ -45,26 +63,6 @@
 
     <div id="playerSection" class="hidden">
 
-        <div class="top-info-modal">
-            <div class="top-info-meta">
-                <span class="top-info-label">Reviewed</span>
-                <span class="top-info-value"><span id="currentCount">0</span> / <span id="totalCount">0</span></span>
-            </div>
-            <div class="top-info-meta">
-                <span class="top-info-label">ETA</span>
-                <span id="etaDisplay" data-tooltip="The displayed time is an estimated completion time and may not be entirely accurate.">--</span>
-            </div>
-            <button id="refreshBtn" class="refresh-btn top-refresh" onclick="fetchAssignedVideos(currentUid)" title="Check for new assignments">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="23 4 23 10 17 10"></polyline>
-                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-                </svg>
-                Refresh
-            </button>
-        </div>
-
-        <h2>Content Review</h2>
-
         <div class="fallback-link-container">
             Platform: <span id="platformLabel" style="font-weight:600; color:var(--text-main);">Content</span>
             <a id="directOpenLink" href="#" target="_blank">Open directly ↗</a>
@@ -72,7 +70,6 @@
 
         <div class="video-container" id="videoContainer">
             <iframe id="videoFrame" src="" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; fullscreen"></iframe>
-            <div id="tiktokEmbedContainer" class="hidden"></div>
         </div>
 
         <div class="form-group">
