@@ -43,10 +43,10 @@ export default async function handler(req, res) {
     const assignedVideos = rows
       .map((row, index) => ({ 
           id: index + 2, 
-          assignedTo: row[0], // Column A is now Name
-          url: row[1],        // Column B is now URL
-          platform: row[2],   // Column C is now Platform
-          status: row[3]      // Column D is now Status
+          assignedTo: row[0], // Column A (Index 0): Name
+          url: row[1],        // Column B (Index 1): URL
+          platform: row[3],   // Column D (Index 3): Platform
+          status: row[4]      // Column E (Index 4): Status
       }))
       .filter(row => row.assignedTo === userName && row.status !== 'Reviewed' && row.status !== 'Skipped');
 

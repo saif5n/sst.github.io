@@ -15,40 +15,42 @@ export default async function handler(req, res) {
     // 1. Fetch UIDs to identify the user name
     const uidsResponse = await sheets.spreadsheets.values.get({ spreadsheetId, range: 'UIDs!A:C' });
     const users = uidsResponse.data.values || [];
-    const validUser = users.find(row => row[1] === String(uid) && row[2] === String(password));
+    
+    // Added .trim() to ensure accidental whitespace doesn't break logins
+    const validUser = users.find(row => 
+        String(row[1]).trim() === String(uid).trim() && 
+        String(row[2]).trim() === String(password).trim()
+    );
 
     if (!validUser) return res.status(401).json({ success: false, message: 'Invalid UID or Password.' });
 
     const targetName = String(validUser[0]).trim(); // This is the Name from UIDs
 
-    // 2. Fetch URLs sheet
-    const urlsResponse = await sheets.spreadsheets.values.get({ spreadsheetId, range: 'URLs!A:D' });
+    // 2. Fetch URLs sheet (Updated range to E to grab the status column)
+    const urlsResponse = await sheets.spreadsheets.values.get({ spreadsheetId, range: 'URLs!A:E' });
     const allRows = urlsResponse.data.values || [];
 
-    // DEBUGGING: Log to Vercel logs so you can see what the server is reading
     console.log("Looking for Name:", targetName);
     
-    // 3. Filter the data
+    // 3. Filter the data based on the new column layout
     const assignedVideos = allRows
       .map((row, index) => ({ rowData: row, id: index + 1 }))
       .filter(item => {
           const row = item.rowData;
           // Column A: Name (index 0)
           // Column B: URL (index 1)
-          // Column C: Platform (index 2)
-          // Column D: Status (index 3)
+          // Column D: Platform (index 3)
+          // Column E: Status (index 4)
+          
           const nameInSheet = String(row[0] || "").trim();
-          const statusInSheet = String(row[3] || "").trim().toLowerCase();
-
-          // DEBUGGING: Remove this console.log after you confirm it works
-          // console.log(`Checking row: ${nameInSheet} | Status: ${statusInSheet}`);
+          const statusInSheet = String(row[4] || "").trim().toLowerCase(); // Now checking index 4
 
           return nameInSheet === targetName && statusInSheet === 'pending';
       })
       .map(item => ({
         id: item.id,
-        url: item.rowData[1], // Column B
-        platform: item.rowData[2] // Column C
+        url: item.rowData[1],     // Column B
+        platform: item.rowData[3] // Column D
       }));
 
     return res.status(200).json({ success: true, username: targetName, assignedVideos });

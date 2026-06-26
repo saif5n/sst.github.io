@@ -15,37 +15,49 @@ export default async function handler(req, res) {
   const isSkipped = (judgement === 'Skipped');
 
   try {
-    // 1. UPDATE URLs sheet
+    // NEW STEP 1: Fetch the duration from Column C of the URLs sheet
+    const durationResponse = await sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: `URLs!C${rowId}`
+    });
+    
+    // Extract the duration value (fallback to an empty string if the cell is blank)
+    const duration = durationResponse.data.values && durationResponse.data.values[0] 
+        ? durationResponse.data.values[0][0] 
+        : "";
+
+    // STEP 2: UPDATE URLs sheet (Status is now Column E, Notes moved to Column F)
     if (isSkipped) {
       await sheets.spreadsheets.values.update({
         spreadsheetId,
-        range: `URLs!D${rowId}:E${rowId}`, 
+        range: `URLs!E${rowId}:F${rowId}`, 
         valueInputOption: 'USER_ENTERED',
         requestBody: { values: [['Skipped', notes]] }, 
       });
     } else {
       await sheets.spreadsheets.values.update({
         spreadsheetId,
-        range: `URLs!D${rowId}`, 
+        range: `URLs!E${rowId}`, 
         valueInputOption: 'USER_ENTERED',
         requestBody: { values: [['Reviewed']] }, 
       });
     }
 
-    // 2. APPEND to Submissions sheet (Only if NOT skipped)
+    // STEP 3: APPEND to Submissions sheet (Only if NOT skipped)
     if (!isSkipped) {
       await sheets.spreadsheets.values.append({
         spreadsheetId,
-        range: 'Submissions!A:F', // Appends to the next available row
+        range: 'Submissions!A:G', // Updated range to include up to Column G
         valueInputOption: 'USER_ENTERED',
         requestBody: { 
           values: [[
-            new Date().toLocaleString(), 
-            username, 
-            url, 
-            platform, 
-            judgement, 
-            notes
+            new Date().toLocaleString(), // Column A
+            username,                    // Column B
+            url,                         // Column C
+            duration,                    // Column D (New!)
+            platform,                    // Column E (Shifted)
+            judgement,                   // Column F (Shifted)
+            notes                        // Column G (Shifted)
           ]] 
         },
       });
