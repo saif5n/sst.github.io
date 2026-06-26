@@ -411,3 +411,23 @@ button:disabled {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+.error-message {
+    background-color: rgba(239, 68, 68, 0.1); /* Subtle red tint */
+    border: 1px solid #ef4444;                 /* Soft crimson border */
+    color: #fca5a5;                            /* Easily readable light red text */
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 16px;
+    text-align: center;
+    animation: shake 0.4s ease-in-out;
+}
+
+/* Optional: Fun micro-interaction that shakes the text slightly when it appears */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+}

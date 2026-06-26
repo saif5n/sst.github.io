@@ -23,24 +23,26 @@
     </div>
 
     <div id="loginSection">
-        <div class="input-group">
-            <label for="uidInput">
-                In-game UID
-                <span class="tooltip-icon" data-tooltip="The numeric user identification of your PUBG MOBILE account.">i</span>
-            </label>
-            <input type="text" id="uidInput" autocomplete="off" />
-        </div>
-
-        <div class="input-group">
-            <label for="passwordInput">
-                Password
-                <span class="tooltip-icon" data-tooltip="The 4-digit password that you have been provided by the Survey Team Discord app.">i</span>
-            </label>
-            <input type="password" id="passwordInput" autocomplete="off" />
-        </div>
-        
-        <button id="loginBtn" onclick="handleLogin()">Log In</button>
+    <div class="input-group">
+        <label for="uidInput">
+            In-game UID
+            <span class="tooltip-icon" data-tooltip="The numeric user identification of your PUBG MOBILE account.">i</span>
+        </label>
+        <input type="text" id="uidInput" autocomplete="off" />
     </div>
+
+    <div class="input-group">
+        <label for="passwordInput">
+            Password
+            <span class="tooltip-icon" data-tooltip="The 4-digit password that you have been provided by the Survey Team Discord app.">i</span>
+        </label>
+        <input type="password" id="passwordInput" autocomplete="off" />
+    </div>
+    
+    <div id="loginError" class="error-message hidden"></div>
+
+    <button id="loginBtn" onclick="attemptLogin()">Log In</button>
+</div>
 
     <div id="playerSection" class="hidden">
         <div class="status-wrapper">
