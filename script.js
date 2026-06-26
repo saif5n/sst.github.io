@@ -142,7 +142,7 @@ async function attemptLogin() {
     }
 }
 
-function loadVideo(index) {
+async function loadVideo(index) {
     document.getElementById("currentCount").innerText = index + 1;
     document.getElementById("totalCount").innerText = allAssignedVideos.length; 
 
@@ -179,8 +179,12 @@ function loadVideo(index) {
         if (!cleanUrl.endsWith('/')) { cleanUrl += '/'; }
         embedUrl = `${cleanUrl}embed`; 
     } else if (platform === "tiktok" || rawUrl.includes("tiktok.com")) {
-        const tiktokId = getTikTokVideoId(rawUrl);
-        renderTikTokEmbed(rawUrl, tiktokId);
+        let finalTikTokUrl = rawUrl;
+        if (isTikTokShortUrl(rawUrl)) {
+            finalTikTokUrl = await resolveTikTokShortUrl(rawUrl);
+        }
+        const tiktokId = getTikTokVideoId(finalTikTokUrl);
+        renderTikTokEmbed(finalTikTokUrl, tiktokId);
         embedUrl = "";
     } else {
         embedUrl = rawUrl; 
@@ -204,17 +208,28 @@ function loadVideo(index) {
 }
 
 function getTikTokVideoId(url) {
-    const shortUrlMatch = url.match(/t\.tiktok\.com\/[A-Za-z0-9]+/);
-    if (shortUrlMatch) {
-        return null; // Short URLs require server-side resolution.
-    }
-
     const longMatch = url.match(/(?:\/video\/)(\d+)/);
     if (longMatch && longMatch[1]) {
         return longMatch[1];
     }
 
     return null;
+}
+
+function isTikTokShortUrl(url) {
+    return /(vt|vm|t)\.tiktok\.com\/[A-Za-z0-9]+/.test(url);
+}
+
+async function resolveTikTokShortUrl(shortUrl) {
+    try {
+        const response = await fetch(shortUrl, { method: 'GET', redirect: 'follow' });
+        if (response && response.url) {
+            return response.url;
+        }
+    } catch (error) {
+        console.warn('TikTok short URL resolution failed:', error);
+    }
+    return shortUrl;
 }
 
 function hideVideoFrames() {
@@ -237,7 +252,7 @@ function renderTikTokEmbed(rawUrl, tiktokId) {
     const blockquote = document.createElement("blockquote");
     blockquote.className = "tiktok-embed";
     blockquote.setAttribute("cite", rawUrl);
-    blockquote.setAttribute("style", "width:100%;min-height:320px;max-width:100%;");
+    blockquote.setAttribute("style", "max-width:605px;min-width:325px;width:100%;");
     if (tiktokId) {
         blockquote.setAttribute("data-video-id", tiktokId);
     }

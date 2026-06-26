@@ -89,6 +89,18 @@ h2 {
     color: var(--text-muted);
 }
 
+.top-info-eta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.eta-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .top-info-value,
 #etaDisplay {
     font-size: 0.95rem;
