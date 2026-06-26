@@ -45,21 +45,19 @@ module.exports = async function handler(req, res) {
 
     // STEP 3: APPEND/UPDATE Submissions sheet (Only if NOT skipped)
     if (!isSkipped) {
-      // Fetch name and link columns (B:C) from Submissions to try matching
-      // by video link (Column C) or reviewer name (Column B).
-      const submissionsResponse = await sheets.spreadsheets.values.get({
+      // Prefer updating an existing submission only when the stored rowId (Col H)
+      // matches the current `rowId`. This prevents merging duplicate links
+      // submitted for different source rows — duplicates will be recorded.
+      const submissionsIdResp = await sheets.spreadsheets.values.get({
         spreadsheetId,
-        range: 'Submissions!B:C'
+        range: 'Submissions!H:H'
       });
 
-      const submissionRows = submissionsResponse.data.values || [];
+      const idRows = submissionsIdResp.data.values || [];
       let existingRowIndex = -1;
-      for (let i = 0; i < submissionRows.length; i++) {
-        const nameCell = String(submissionRows[i][0] || "").trim(); // Column B
-        const linkCell = String(submissionRows[i][1] || "").trim(); // Column C
-        // Require both link and reviewer name to match to consider this the same submission
-        if (linkCell === String(url).trim() && nameCell === String(username).trim()) {
-          existingRowIndex = i + 1;
+      for (let i = 0; i < idRows.length; i++) {
+        if (String(idRows[i][0]) === String(rowId)) {
+          existingRowIndex = i + 1; // 1-based row index
           break;
         }
       }
@@ -83,32 +81,41 @@ module.exports = async function handler(req, res) {
           requestBody: { values: newRow }
         });
       } else {
-        // Try to find the first empty top row in Submissions (A:H) and use it
+        // Insert a new row at the top (row 2) and write the submission there.
         try {
-          const allSubsResp = await sheets.spreadsheets.values.get({
-            spreadsheetId,
-            range: 'Submissions!A:H'
-          });
-          const allRows = allSubsResp.data.values || [];
-          let emptyRowIndex = -1;
-          for (let i = 0; i < allRows.length; i++) {
-            const row = allRows[i] || [];
-            // consider row empty if all A-H cells are missing/empty
-            const filled = row.slice(0, 8).some(cell => String(cell || "").trim() !== "");
-            if (!filled) {
-              emptyRowIndex = i + 1; // 1-based
-              break;
-            }
-          }
+          const meta = await sheets.spreadsheets.get({ spreadsheetId });
+          const submissionsSheet = meta.data.sheets.find(s => s.properties && s.properties.title === 'Submissions');
+          if (submissionsSheet && submissionsSheet.properties && typeof submissionsSheet.properties.sheetId === 'number') {
+            const sheetId = submissionsSheet.properties.sheetId;
+            // Insert a blank row at index 1 (zero-based) which becomes row 2 in the UI
+            await sheets.spreadsheets.batchUpdate({
+              spreadsheetId,
+              requestBody: {
+                requests: [
+                  {
+                    insertDimension: {
+                      range: {
+                        sheetId: sheetId,
+                        dimension: 'ROWS',
+                        startIndex: 1,
+                        endIndex: 2
+                      },
+                      inheritFromBefore: false
+                    }
+                  }
+                ]
+              }
+            });
 
-          if (emptyRowIndex > 0) {
+            // Write new data into the newly inserted row (A2:H2)
             await sheets.spreadsheets.values.update({
               spreadsheetId,
-              range: `Submissions!A${emptyRowIndex}:H${emptyRowIndex}`,
+              range: `Submissions!A2:H2`,
               valueInputOption: 'USER_ENTERED',
               requestBody: { values: newRow }
             });
           } else {
+            // Fallback to append if sheetId unavailable
             await sheets.spreadsheets.values.append({
               spreadsheetId,
               range: 'Submissions!A:H',

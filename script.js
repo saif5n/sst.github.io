@@ -275,8 +275,9 @@ async function loadVideo(index) {
 
     const skipSection = document.getElementById("skipReasonSection");
     const skipReasonInput = document.getElementById("skipReason");
+    // Populate skip reason from the per-video draft, but collapse the skip panel by default
     skipReasonInput.value = draft.skipReason || "";
-    if (savedSkipReason) {
+    if (draft.skipReason && String(draft.skipReason).trim() !== "") {
         skipSection.classList.remove("hidden");
     } else {
         skipSection.classList.add("hidden");
