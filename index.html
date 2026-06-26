@@ -31,7 +31,10 @@
 </div>
 
 <div class="container">
-    <h2>Content Review</h2>
+        <div class="review-header-row">
+            <button id="prevVideoBtn" class="prev-video-btn" type="button" onclick="goToPreviousVideo()" title="Previous video">← Previous</button>
+            <h2>Content Review</h2>
+        </div>
 
     <div class="character-display" id="characterDisplay">
         <img src="Character.png" alt="Survey Team Character">
@@ -67,8 +70,8 @@
     <div id="playerSection" class="hidden">
 
         <div class="fallback-link-container">
-            Platform: <span id="platformLabel" style="font-weight:600; color:var(--text-main);">Content</span>
-            <a id="directOpenLink" href="#" target="_blank">Open directly ↗</a>
+            <span class="platform-label">Platform: <span id="platformLabel" style="font-weight:600; color:var(--text-main);">Content</span></span>
+            <a id="directOpenLink" href="#" target="_blank" class="direct-link-btn">Open directly</a>
         </div>
 
         <div class="player-grid">

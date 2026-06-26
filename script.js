@@ -17,12 +17,33 @@ document.addEventListener('keydown', function(event) {
 });
 
 function initializeApplication() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const previewMode = urlParams.get("preview") === "true";
     const savedUser = localStorage.getItem("currentUser");
     const savedUid = localStorage.getItem("currentUid");
     const savedVideos = localStorage.getItem("assignedVideos");
     const savedIndex = localStorage.getItem("currentIndex"); 
 
-    if (savedUser && savedVideos && savedUid) {
+    if (previewMode) {
+        currentUser = "Preview";
+        currentUid = "0000000000";
+        currentIndex = 0;
+        allAssignedVideos = [
+            { id: 1, url: "https://www.tiktok.com/@scout2015/video/7183715007844314117", platform: "tiktok", duration: "00:15" },
+            { id: 2, url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", platform: "youtube", duration: "00:30" }
+        ];
+
+        localStorage.setItem("currentUser", currentUser);
+        localStorage.setItem("currentUid", currentUid);
+        localStorage.setItem("assignedVideos", JSON.stringify(allAssignedVideos));
+        localStorage.setItem("currentIndex", currentIndex);
+
+        document.getElementById("loginSection").classList.add("hidden");
+        document.getElementById("characterDisplay").classList.add("hidden");
+        document.getElementById("playerSection").classList.remove("hidden");
+        document.getElementById("totalCount").innerText = allAssignedVideos.length;
+        loadVideo(currentIndex);
+    } else if (savedUser && savedVideos && savedUid) {
         currentUser = savedUser;
         currentUid = savedUid;
         allAssignedVideos = JSON.parse(savedVideos);
@@ -156,15 +177,19 @@ async function loadVideo(index) {
 
     const videoData = allAssignedVideos[index];
     const iframe = document.getElementById("videoFrame");
-    const directLink = document.getElementById("directOpenLink");
     const platformLabel = document.getElementById("platformLabel");
+    const directLink = document.getElementById("directOpenLink");
+    const prevButton = document.getElementById("prevVideoBtn");
 
     let embedUrl = "";
     const rawUrl = (videoData.url || "").trim();
     const platform = (videoData.platform || "").toLowerCase().trim();
 
     platformLabel.textContent = formatPlatformName(platform);
-    directLink.href = rawUrl;
+    if (directLink) {
+        directLink.href = rawUrl || "#";
+    }
+    prevButton.disabled = index === 0;
 
     if (rawUrl.includes("youtu") || platform === "youtube") {
         const ytRegEx = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\/shorts\/)([^#\&\?]*).*/;
@@ -317,13 +342,16 @@ function renderTikTokEmbed(rawUrl, tiktokId) {
 function appendTikTokFallback(wrapper, rawUrl) {
     const fallback = document.createElement("div");
     fallback.className = "tiktok-fallback";
-    const openLink = document.createElement("a");
-    openLink.href = rawUrl;
-    openLink.target = "_blank";
-    openLink.rel = "noreferrer noopener";
-    openLink.textContent = "Open directly on TikTok";
-    fallback.appendChild(openLink);
+    fallback.textContent = "Preview unavailable for this TikTok content.";
     wrapper.appendChild(fallback);
+}
+
+function goToPreviousVideo() {
+    if (currentIndex > 0) {
+        currentIndex -= 1;
+        localStorage.setItem("currentIndex", currentIndex);
+        loadVideo(currentIndex);
+    }
 }
 
 function renderTikTokEmbedHtml(embedHtml, rawUrl) {

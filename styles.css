@@ -24,15 +24,50 @@ body {
 }
 
 .container {
+    position: relative;
     background-color: var(--card-bg);
     padding: 40px;
     border-radius: 20px;
     border: 1px solid var(--border-color);
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.05);
-    max-width: 600px;
+    max-width: 760px;
     width: 100%;
     box-sizing: border-box;
     animation: fadeIn 0.4s ease;
+}
+
+.review-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 18px;
+    margin-bottom: 18px;
+}
+
+.prev-video-btn {
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-main);
+    border-radius: 14px;
+    padding: 9px 14px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.prev-video-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+.prev-video-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
 }
 
 h2 {
@@ -160,7 +195,6 @@ h2 {
 #etaDisplay {
     font-size: 0.8rem;
     font-weight: 600;
-    text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-muted);
     background-color: var(--input-bg);
@@ -306,27 +340,63 @@ button.info-icon {
 
 /* ── Platform/fallback link ── */
 .fallback-link-container {
-    text-align: center;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
     margin-bottom: 16px;
     font-size: 0.9rem;
     background-color: rgba(99, 102, 241, 0.05);
-    padding: 10px 12px;
+    padding: 12px 16px;
     border-radius: 10px;
     border: 1px solid rgba(99, 102, 241, 0.2);
     color: var(--text-muted);
 }
 
-.fallback-link-container a {
+.fallback-link-container .platform-label {
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.fallback-link-container .platform-label span {
+    color: var(--text-main);
+}
+
+.fallback-link-container a.direct-link-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    padding: 8px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    background: rgba(99, 102, 241, 0.12);
     color: var(--primary);
     text-decoration: none;
     font-weight: 600;
-    margin-left: 8px;
-    transition: color 0.2s;
+    transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
 }
 
-.fallback-link-container a:hover {
+.fallback-link-container a.direct-link-btn:hover {
+    transform: translateY(-1px);
     color: var(--text-main);
+    background: rgba(99, 102, 241, 0.18);
 }
+
+.fallback-link-container a.direct-link-btn::after {
+    content: "→";
+    margin-left: 6px;
+    font-size: 1rem;
+}
+
+@media (max-width: 640px) {
+    .fallback-link-container {
+        justify-content: center;
+        text-align: center;
+    }
+}
+
 
 /* ── Video ── */
 .video-container {
