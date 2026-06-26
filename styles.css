@@ -1,6 +1,6 @@
 :root {
-    --primary: #6366f1;
-    --primary-hover: #4f46e5;
+    --primary: #8A8AFF;
+    --primary-hover: #6f6fff;
     --bg-color: #09090b;
     --card-bg: #18181b;
     --input-bg: #27272a;
@@ -8,7 +8,7 @@
     --text-muted: #a1a1aa;
     --border-color: #3f3f46;
     --success: #10b981;
-    --accent-glow: rgba(99, 102, 241, 0.15);
+    --accent-glow: rgba(138, 138, 255, 0.15);
 }
 
 body {
@@ -58,11 +58,10 @@ body {
     background: transparent;
     color: var(--text-muted);
     border-radius: 8px;
-    padding: 6px;
-    width: 36px;
+    padding: 6px 10px;
     height: 36px;
-    font-size: 0.9rem;
-    font-weight: 500;
+    font-size: 0.95rem;
+    font-weight: 600;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -71,7 +70,19 @@ body {
 }
 
 .prev-video-btn:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(244, 219, 185, 0.04);
+    color: var(--text-main);
+}
+
+/* Slightly warm, subtle button for direct open */
+.fallback-link-container a.direct-link-btn {
+    border-color: rgba(180,83,9,0.18);
+    background: rgba(180,83,9,0.06);
+    color: var(--primary);
+}
+
+.fallback-link-container a.direct-link-btn:hover {
+    background: rgba(180,83,9,0.10);
     color: var(--text-main);
 }
 

@@ -4,6 +4,106 @@ let currentIndex = 0;
 let currentUser = "";
 let currentUid = ""; // Tracks the 10-digit database look-up key
 let videoDrafts = {};
+let assignedPollId = null;
+let assignmentEventSource = null;
+
+function startAssignedPolling(intervalMs = 20000) {
+    if (!currentUid) return;
+    stopAssignedPolling();
+    assignedPollId = setInterval(() => {
+        // silent poll (no loading UI)
+        fetchAssignedVideos(currentUid, false).catch(() => {});
+    }, intervalMs);
+}
+
+function stopAssignedPolling() {
+    if (assignedPollId) {
+        clearInterval(assignedPollId);
+        assignedPollId = null;
+    }
+}
+
+function startAssignedSSE() {
+    if (!currentUid) return;
+    stopAssignedSSE();
+    stopAssignedPolling();
+    try {
+        const url = `/api/assignments-sse?uid=${encodeURIComponent(currentUid)}`;
+        assignmentEventSource = new EventSource(url);
+
+        assignmentEventSource.addEventListener('update', (e) => {
+            try {
+                const parsed = JSON.parse(e.data);
+                if (parsed && Array.isArray(parsed.assignedVideos)) {
+                    handleAssignedUpdate(parsed.assignedVideos);
+                }
+            } catch (err) {
+                console.error('Failed to parse SSE update:', err);
+            }
+        });
+
+        assignmentEventSource.onmessage = (e) => {
+            // fallback for default "message" events
+            try {
+                const parsed = JSON.parse(e.data);
+                if (parsed && Array.isArray(parsed.assignedVideos)) {
+                    handleAssignedUpdate(parsed.assignedVideos);
+                }
+            } catch (err) {
+                console.error('Failed to parse SSE message:', err);
+            }
+        };
+
+        assignmentEventSource.onerror = (err) => {
+            console.error('SSE connection error', err);
+            // Attempt reconnect after a short delay
+            stopAssignedSSE();
+            setTimeout(() => {
+                startAssignedSSE();
+            }, 10000);
+        };
+    } catch (err) {
+        console.error('Failed to start SSE:', err);
+        // fallback to polling
+        startAssignedPolling();
+    }
+}
+
+function stopAssignedSSE() {
+    if (assignmentEventSource) {
+        try { assignmentEventSource.close(); } catch (e) {}
+        assignmentEventSource = null;
+    }
+}
+
+function handleAssignedUpdate(newAssigned) {
+    const prev = JSON.stringify(allAssignedVideos || []);
+    const incoming = JSON.stringify(newAssigned || []);
+    if (prev === incoming) return; // no change
+
+    allAssignedVideos = newAssigned || [];
+    videoDrafts = {};
+    localStorage.setItem("currentUser", currentUser);
+    localStorage.setItem("currentUid", currentUid);
+    localStorage.setItem("assignedVideos", JSON.stringify(allAssignedVideos));
+    localStorage.setItem("videoDrafts", JSON.stringify(videoDrafts));
+
+    if (allAssignedVideos.length > 0) {
+        currentIndex = 0;
+        localStorage.setItem("currentIndex", currentIndex);
+        document.getElementById("finishedSection").classList.add("hidden");
+        document.getElementById("playerSection").classList.remove("hidden");
+        document.getElementById("totalCount").innerText = allAssignedVideos.length;
+        loadVideo(currentIndex);
+        // small non-intrusive notification
+        try { window.navigator && window.navigator.vibrate && window.navigator.vibrate(40); } catch (e) {}
+    } else {
+        document.getElementById("playerSection").classList.add("hidden");
+        document.getElementById("finishedSection").classList.remove("hidden");
+        const topInfo = document.getElementById('topInfo');
+        if (topInfo) topInfo.classList.add('hidden');
+    }
+}
 
 window.addEventListener('DOMContentLoaded', initializeApplication);
 
@@ -52,22 +152,26 @@ function initializeApplication() {
         allAssignedVideos = JSON.parse(savedVideos);
         videoDrafts = JSON.parse(localStorage.getItem("videoDrafts") || "{}");
         currentIndex = savedIndex ? parseInt(savedIndex) : 0; 
-
-        // AUTO-LOGOUT GATEKEEPER:
-        // If they refresh while on the finished screen or have no assignments, log out immediately
-        if (currentIndex >= allAssignedVideos.length || allAssignedVideos.length === 0) {
-            localStorage.clear();
-            document.getElementById("loginSection").classList.remove("hidden");
-            document.getElementById("characterDisplay").classList.remove("hidden");
-            document.getElementById("finishedSection").classList.add("hidden");
+        // If there are no assigned videos or the index points past the end,
+        // show the finished screen but keep the session active so polling can detect new assignments.
+        if (allAssignedVideos.length === 0 || currentIndex >= allAssignedVideos.length) {
+            document.getElementById("loginSection").classList.add("hidden");
+            document.getElementById("characterDisplay").classList.add("hidden");
+            document.getElementById("playerSection").classList.add("hidden");
+            document.getElementById("finishedSection").classList.remove("hidden");
+            document.getElementById("totalCount").innerText = allAssignedVideos.length;
+            startAssignedSSE();
         } else {
             document.getElementById("loginSection").classList.add("hidden");
             document.getElementById("characterDisplay").classList.add("hidden");
             document.getElementById("playerSection").classList.remove("hidden");
             document.getElementById("totalCount").innerText = allAssignedVideos.length;
             loadVideo(currentIndex);
+            startAssignedSSE();
         }
     } else {
+        stopAssignedSSE();
+        stopAssignedPolling();
         localStorage.clear();
         document.getElementById("loginSection").classList.remove("hidden");
         document.getElementById("characterDisplay").classList.remove("hidden");
@@ -149,13 +253,14 @@ async function attemptLogin() {
                 document.getElementById("playerSection").classList.remove("hidden");
                 document.getElementById("totalCount").innerText = allAssignedVideos.length;
                 loadVideo(currentIndex);
+                startAssignedSSE();
             } else {
-                // Instantly wipe memory so refreshing this empty state triggers a login fallback
-                localStorage.clear();
+                // Keep session active even when no assignments so SSE can detect new assignments
                 document.getElementById("finishedSection").classList.remove("hidden");
                 // Hide top info/ETA when showing the finished screen
                 const topInfoEl = document.getElementById('topInfo');
                 if (topInfoEl) topInfoEl.classList.add('hidden');
+                startAssignedSSE();
             }
         } else {
             // 3. If login fails, bring the character and form back
@@ -556,40 +661,34 @@ function moveNext() {
 async function fetchAssignedVideos(uid, showLoading = true) {
     // If cache was wiped, check our active runtime variable fallback
     const lookupUid = uid || currentUid;
-    
-    if (!lookupUid) {
-        alert("Session context missing. Refreshing to return to login screen.");
-        localStorage.clear();
-        location.reload();
-        return;
-    }
-
-    if (showLoading) {
-        document.getElementById("loadingMsg").innerHTML = `<div class="spinner"></div><h3>Syncing</h3><p>Checking database entries...</p>`;
-        document.getElementById("loadingMsg").classList.remove("hidden");
-    }
-    
     try {
+        const prevLen = allAssignedVideos.length;
+        if (showLoading) {
+            document.getElementById("loadingMsg").innerHTML = `<div class="spinner"></div><h3>Syncing</h3><p>Checking database entries...</p>`;
+            document.getElementById("loadingMsg").classList.remove("hidden");
+        }
+
         const response = await fetch('/api/get-videos', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ uid: lookupUid })
         });
-        
+
         const result = await response.json();
-        
-        if (result.success) {
-            allAssignedVideos = result.assignedVideos;
-            document.getElementById("loadingMsg").classList.add("hidden");
-            
-            if (allAssignedVideos.length > 0) {
+        const newAssigned = (result && result.assignedVideos) ? result.assignedVideos : [];
+
+        if (showLoading) document.getElementById("loadingMsg").classList.add("hidden");
+
+        if (result && result.success) {
+            if (newAssigned.length > 0) {
                 // Re-establish session values to protect against page refreshes
+                allAssignedVideos = newAssigned;
                 videoDrafts = {};
                 localStorage.setItem("currentUser", currentUser);
                 localStorage.setItem("currentUid", currentUid);
                 localStorage.setItem("assignedVideos", JSON.stringify(allAssignedVideos));
                 localStorage.setItem("videoDrafts", JSON.stringify(videoDrafts));
-                
+
                 currentIndex = 0;
                 localStorage.setItem("currentIndex", currentIndex);
 
@@ -597,21 +696,24 @@ async function fetchAssignedVideos(uid, showLoading = true) {
                 document.getElementById("playerSection").classList.remove("hidden");
                 document.getElementById("totalCount").innerText = allAssignedVideos.length;
                 loadVideo(currentIndex);
-                alert(`Sync complete! Loaded ${allAssignedVideos.length} new video(s).`);
+                if (showLoading || newAssigned.length > prevLen) {
+                    alert(`Sync complete! Loaded ${newAssigned.length} new video(s).`);
+                }
             } else {
-                // Keep things locked out if array remains empty
-                localStorage.clear();
+                // No assignments: show finished screen but keep session active so polling can detect new items
+                allAssignedVideos = [];
                 document.getElementById("finishedSection").classList.remove("hidden");
                 document.getElementById("playerSection").classList.add("hidden");
-                // Hide top info/ETA when showing finished screen
                 const topInfo = document.getElementById('topInfo');
                 if (topInfo) topInfo.classList.add('hidden');
-                alert("No new items assigned yet.");
+                if (showLoading) alert("No new items assigned yet.");
             }
+        } else {
+            if (showLoading) alert(result && result.message ? result.message : 'Sync failed');
         }
     } catch (err) {
-        alert("Sync failed: " + err.message);
-        document.getElementById("loadingMsg").classList.add("hidden");
+        if (showLoading) alert("Sync failed: " + err.message);
+        if (document.getElementById("loadingMsg")) document.getElementById("loadingMsg").classList.add("hidden");
     }
 }
 
