@@ -233,12 +233,37 @@ async function loadVideo(index) {
         hideVideoFrames();
     }
     
-    document.getElementById("judgement").value = "";
-    document.getElementById("notes").value = "";
+    const savedJudgement = videoData.judgement || "";
+    const savedNotes = videoData.notes || "";
+    const savedSkipReason = videoData.skipReason || "";
 
-    // Reset skip area to collapsed state
-    document.getElementById("skipReasonSection").classList.add("hidden");
-    document.getElementById("skipReason").value = "";
+    document.getElementById("judgement").value = savedJudgement;
+    document.getElementById("notes").value = savedNotes;
+
+    const skipSection = document.getElementById("skipReasonSection");
+    const skipReasonInput = document.getElementById("skipReason");
+    skipReasonInput.value = savedSkipReason;
+    if (savedSkipReason) {
+        skipSection.classList.remove("hidden");
+    } else {
+        skipSection.classList.add("hidden");
+    }
+}
+
+function saveCurrentVideoState() {
+    const currentVideo = allAssignedVideos[currentIndex];
+    if (!currentVideo) return;
+
+    currentVideo.judgement = document.getElementById("judgement").value;
+    currentVideo.notes = document.getElementById("notes").value;
+    const skipReason = document.getElementById("skipReason").value;
+    if (skipReason) {
+        currentVideo.skipReason = skipReason;
+    } else {
+        delete currentVideo.skipReason;
+    }
+
+    localStorage.setItem("assignedVideos", JSON.stringify(allAssignedVideos));
 }
 
 function getTikTokVideoId(url) {
@@ -333,21 +358,12 @@ function renderTikTokEmbed(rawUrl, tiktokId) {
     script.src = "https://www.tiktok.com/embed.js";
     script.async = true;
     wrapper.appendChild(script);
-
-    appendTikTokFallback(wrapper, rawUrl);
-
     document.getElementById("videoContainer").style.display = "block";
-}
-
-function appendTikTokFallback(wrapper, rawUrl) {
-    const fallback = document.createElement("div");
-    fallback.className = "tiktok-fallback";
-    fallback.textContent = "Preview unavailable for this TikTok content.";
-    wrapper.appendChild(fallback);
 }
 
 function goToPreviousVideo() {
     if (currentIndex > 0) {
+        saveCurrentVideoState();
         currentIndex -= 1;
         localStorage.setItem("currentIndex", currentIndex);
         loadVideo(currentIndex);
@@ -437,6 +453,8 @@ async function executeSave(judgement, notes) {
         judgement: judgement,
         notes: notes
     };
+
+    saveCurrentVideoState();
 
     try {
         const response = await fetch('/api/save', {
