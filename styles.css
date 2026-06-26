@@ -348,72 +348,30 @@ iframe {
     display: block;
 }
 
-.video-panel,
-.judgement-panel {
-    width: 100%;
-    min-width: 0;
-    box-sizing: border-box;
-    border-radius: 20px;
-    background: rgba(15, 23, 42, 0.98);
-    border: 1px solid rgba(148, 163, 184, 0.18);
-    box-shadow: 0 18px 35px rgba(0, 0, 0, 0.12);
-}
-
-.video-panel {
-    padding: 18px;
-}
-
-.judgement-panel {
-    padding: 24px;
-}
-
 .player-grid {
     display: block;
-    width: 100%;
 }
 
 .player-controls {
     width: 100%;
-    min-width: 0;
-    box-sizing: border-box;
 }
 
 @media (min-width: 641px) {
     .player-grid {
         display: grid;
-        grid-template-columns: minmax(360px, 2fr) minmax(320px, 1fr);
-        gap: 28px;
+        grid-template-columns: minmax(320px, 1.8fr) minmax(260px, 1fr);
+        gap: 24px;
         align-items: start;
-    }
-
-    .player-grid > * {
-        min-width: 0;
-    }
-
-    .player-panel,
-    .judgement-panel {
-        min-width: 0;
-    }
-
-    .player-grid .video-container {
-        margin: 0;
-        align-self: start;
-        min-width: 0;
     }
 
     .player-controls {
         display: flex;
         flex-direction: column;
         gap: 20px;
-        background: transparent;
-        border: none;
-        padding: 0;
-        box-shadow: none;
     }
 
-    .player-controls .form-group,
-    .player-controls .skip-area {
-        margin-bottom: 0;
+    .player-grid .video-container {
+        margin: 0;
     }
 
     .fallback-link-container {

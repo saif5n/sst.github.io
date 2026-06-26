@@ -72,42 +72,38 @@
         </div>
 
         <div class="player-grid">
-            <div class="video-panel">
-                <div class="video-container" id="videoContainer">
-                    <iframe id="videoFrame" src="" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; fullscreen"></iframe>
-                    <div id="tiktokEmbedWrapper" class="tiktok-embed-wrapper"></div>
-                </div>
+            <div class="video-container" id="videoContainer">
+                <iframe id="videoFrame" src="" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; fullscreen"></iframe>
+                <div id="tiktokEmbedWrapper" class="tiktok-embed-wrapper"></div>
             </div>
 
-            <div class="judgement-panel">
-                <div class="player-controls">
-                    <div class="form-group">
-                        <label for="judgement">Judgement</label>
-                        <select id="judgement">
-                            <option value="">Select</option>
-                            <option value="Correct">Correct</option>
-                            <option value="Incorrect">Incorrect</option>
+            <div class="player-controls">
+                <div class="form-group">
+                    <label for="judgement">Judgement</label>
+                    <select id="judgement">
+                        <option value="">Select</option>
+                        <option value="Correct">Correct</option>
+                        <option value="Incorrect">Incorrect</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">Notes (Optional)</label>
+                    <textarea id="notes" placeholder="Feel free to add any additional context here."></textarea>
+                </div>
+
+                <button id="submitBtn" onclick="submitResult()">Submit (Enter)</button>
+
+                <div class="skip-area">
+                    <button id="skipBtn" class="btn-skip-toggle" onclick="toggleSkip()">Skip / Broken Link</button>
+                    <div class="form-group hidden" id="skipReasonSection">
+                        <label for="skipReason">Reason for Skipping</label>
+                        <select id="skipReason">
+                            <option value="">Select a reason</option>
+                            <option value="The video is not loading">The video is not loading</option>
+                            <option value="The video is unavailable in my region">The video is unavailable in my region</option>
                         </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="notes">Notes (Optional)</label>
-                        <textarea id="notes" placeholder="Feel free to add any additional context here."></textarea>
-                    </div>
-
-                    <button id="submitBtn" onclick="submitResult()">Submit (Enter)</button>
-
-                    <div class="skip-area">
-                        <button id="skipBtn" class="btn-skip-toggle" onclick="toggleSkip()">Skip / Broken Link</button>
-                        <div class="form-group hidden" id="skipReasonSection">
-                            <label for="skipReason">Reason for Skipping</label>
-                            <select id="skipReason">
-                                <option value="">Select a reason</option>
-                                <option value="The video is not loading">The video is not loading</option>
-                                <option value="The video is unavailable in my region">The video is unavailable in my region</option>
-                            </select>
-                            <button id="confirmSkipBtn" class="btn-secondary" style="margin-top:10px;" onclick="skipResult()">Confirm Skip</button>
-                        </div>
+                        <button id="confirmSkipBtn" class="btn-secondary" style="margin-top:10px;" onclick="skipResult()">Confirm Skip</button>
                     </div>
                 </div>
             </div>
