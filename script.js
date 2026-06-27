@@ -76,10 +76,25 @@ function stopAssignedSSE() {
     }
 }
 
+function shouldApplyAssignmentUpdate(newAssigned) {
+    if (!Array.isArray(newAssigned)) return false;
+    const currentCount = allAssignedVideos.length;
+    const incomingCount = newAssigned.length;
+    if (incomingCount === 0) return false;
+    if (currentCount === 0 && incomingCount > 0) return true;
+    return incomingCount > currentCount;
+}
+
 function handleAssignedUpdate(newAssigned) {
+    if (!shouldApplyAssignmentUpdate(newAssigned)) return;
+
     const prev = JSON.stringify(allAssignedVideos || []);
     const incoming = JSON.stringify(newAssigned || []);
     if (prev === incoming) return; // no change
+
+    const previousCount = allAssignedVideos.length;
+    const incomingCount = (newAssigned || []).length;
+    const hadActiveItems = previousCount > 0 && currentIndex < previousCount;
 
     allAssignedVideos = newAssigned || [];
     videoDrafts = {};
@@ -88,14 +103,19 @@ function handleAssignedUpdate(newAssigned) {
     localStorage.setItem("assignedVideos", JSON.stringify(allAssignedVideos));
     localStorage.setItem("videoDrafts", JSON.stringify(videoDrafts));
 
+    document.getElementById("totalCount").innerText = allAssignedVideos.length;
+
     if (allAssignedVideos.length > 0) {
-        currentIndex = 0;
+        if (!hadActiveItems) {
+            currentIndex = 0;
+        } else if (currentIndex >= allAssignedVideos.length) {
+            currentIndex = allAssignedVideos.length - 1;
+        }
+
         localStorage.setItem("currentIndex", currentIndex);
         document.getElementById("finishedSection").classList.add("hidden");
         document.getElementById("playerSection").classList.remove("hidden");
-        document.getElementById("totalCount").innerText = allAssignedVideos.length;
         loadVideo(currentIndex);
-        // small non-intrusive notification
         try { window.navigator && window.navigator.vibrate && window.navigator.vibrate(40); } catch (e) {}
     } else {
         document.getElementById("playerSection").classList.add("hidden");
@@ -143,9 +163,11 @@ function initializeApplication() {
 
         document.getElementById("loginSection").classList.add("hidden");
         document.getElementById("characterDisplay").classList.add("hidden");
+        document.getElementById("finishedSection").classList.add("hidden");
         document.getElementById("playerSection").classList.remove("hidden");
         document.getElementById("totalCount").innerText = allAssignedVideos.length;
         loadVideo(currentIndex);
+        return;
     } else if (savedUser && savedVideos && savedUid) {
         currentUser = savedUser;
         currentUid = savedUid;
@@ -680,33 +702,33 @@ async function fetchAssignedVideos(uid, showLoading = true) {
         if (showLoading) document.getElementById("loadingMsg").classList.add("hidden");
 
         if (result && result.success) {
-            if (newAssigned.length > 0) {
-                // Re-establish session values to protect against page refreshes
-                allAssignedVideos = newAssigned;
-                videoDrafts = {};
-                localStorage.setItem("currentUser", currentUser);
-                localStorage.setItem("currentUid", currentUid);
-                localStorage.setItem("assignedVideos", JSON.stringify(allAssignedVideos));
-                localStorage.setItem("videoDrafts", JSON.stringify(videoDrafts));
-
-                currentIndex = 0;
-                localStorage.setItem("currentIndex", currentIndex);
-
-                document.getElementById("finishedSection").classList.add("hidden");
-                document.getElementById("playerSection").classList.remove("hidden");
-                document.getElementById("totalCount").innerText = allAssignedVideos.length;
-                loadVideo(currentIndex);
-                if (showLoading || newAssigned.length > prevLen) {
-                    alert(`Sync complete! Loaded ${newAssigned.length} new video(s).`);
+            const currentCount = allAssignedVideos.length;
+            const newCount = newAssigned.length;
+            const shouldApply = newCount > currentCount || (currentCount === 0 && newCount > 0);
+            if (!shouldApply) {
+                if (showLoading) {
+                    alert("No new content assigned.");
                 }
-            } else {
-                // No assignments: show finished screen but keep session active so polling can detect new items
-                allAssignedVideos = [];
-                document.getElementById("finishedSection").classList.remove("hidden");
-                document.getElementById("playerSection").classList.add("hidden");
-                const topInfo = document.getElementById('topInfo');
-                if (topInfo) topInfo.classList.add('hidden');
-                if (showLoading) alert("No new items assigned yet.");
+                return;
+            }
+
+            // Re-establish session values to protect against page refreshes
+            allAssignedVideos = newAssigned;
+            videoDrafts = {};
+            localStorage.setItem("currentUser", currentUser);
+            localStorage.setItem("currentUid", currentUid);
+            localStorage.setItem("assignedVideos", JSON.stringify(allAssignedVideos));
+            localStorage.setItem("videoDrafts", JSON.stringify(videoDrafts));
+
+            currentIndex = 0;
+            localStorage.setItem("currentIndex", currentIndex);
+
+            document.getElementById("finishedSection").classList.add("hidden");
+            document.getElementById("playerSection").classList.remove("hidden");
+            document.getElementById("totalCount").innerText = allAssignedVideos.length;
+            loadVideo(currentIndex);
+            if (showLoading) {
+                alert(`Sync complete! Loaded ${newAssigned.length} new video(s).`);
             }
         } else {
             if (showLoading) alert(result && result.message ? result.message : 'Sync failed');
