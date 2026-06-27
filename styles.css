@@ -1,6 +1,6 @@
 :root {
-    --primary: #6366f1;
-    --primary-hover: #4f46e5;
+    --primary: #7C6FFF;
+    --primary-hover: #6B5CE7;
     --bg-color: #09090b;
     --card-bg: #18181b;
     --input-bg: #27272a;
@@ -8,7 +8,7 @@
     --text-muted: #a1a1aa;
     --border-color: #3f3f46;
     --success: #10b981;
-    --accent-glow: rgba(99, 102, 241, 0.15);
+    --accent-glow: rgba(124, 111, 255, 0.15);
 }
 
 body {
@@ -53,6 +53,28 @@ body {
     margin: 0;
 }
 
+/* Center h2 on mobile when no prev button is visible */
+@media (max-width: 640px) {
+    .review-header-row {
+        justify-content: center;
+    }
+
+    .review-header-row h2 {
+        text-align: center;
+        width: 100%;
+    }
+
+    /* When the prev button IS visible, push h2 back to a natural position */
+    .review-header-row:has(.prev-video-btn:not(.hidden)) {
+        justify-content: flex-start;
+    }
+
+    .review-header-row:has(.prev-video-btn:not(.hidden)) h2 {
+        text-align: left;
+        width: auto;
+    }
+}
+
 .prev-video-btn {
     border: none;
     background: transparent;
@@ -91,13 +113,35 @@ h2 {
     letter-spacing: -0.025em;
 }
 
-/* Center the header only on the login screen */
-#loginSection + .container .review-header-row h2,
-/* Fallback: specifically target when loginSection is visible by giving a utility class via JS */
-.center-login-header h2 {
-    text-align: center;
-    width: 100%;
-    margin-left: 0;
+/* ── Logout button ── */
+.logout-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    white-space: nowrap;
+    width: auto !important;
+    margin-top: 0 !important;
+    box-shadow: none !important;
+}
+
+.logout-btn:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #fca5a5;
+    transform: none;
 }
 
 /* ── Character ── */
@@ -225,7 +269,6 @@ h2 {
     gap: 6px;
     position: relative;
     cursor: help;
-    /* Removed white-space: nowrap — it was clipping the badge text on small screens */
 }
 
 #etaDisplay::before {
@@ -379,10 +422,10 @@ button.info-icon {
     gap: 12px;
     margin-bottom: 16px;
     font-size: 0.9rem;
-    background-color: rgba(99, 102, 241, 0.05);
+    background-color: rgba(124, 111, 255, 0.05);
     padding: 12px 16px;
     border-radius: 10px;
-    border: 1px solid rgba(99, 102, 241, 0.2);
+    border: 1px solid rgba(124, 111, 255, 0.2);
     color: var(--text-muted);
 }
 
@@ -402,8 +445,8 @@ button.info-icon {
     white-space: nowrap;
     padding: 8px 14px;
     border-radius: 12px;
-    border: 1px solid rgba(99, 102, 241, 0.35);
-    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(124, 111, 255, 0.35);
+    background: rgba(124, 111, 255, 0.12);
     color: var(--primary);
     text-decoration: none;
     font-weight: 600;
@@ -413,7 +456,7 @@ button.info-icon {
 .fallback-link-container a.direct-link-btn:hover {
     transform: translateY(-1px);
     color: var(--text-main);
-    background: rgba(99, 102, 241, 0.18);
+    background: rgba(124, 111, 255, 0.18);
 }
 
 .fallback-link-container a.direct-link-btn::after {
@@ -630,7 +673,7 @@ textarea {
 }
 
 /* ── Primary button ── */
-button:not(.refresh-btn):not(.btn-secondary):not(.btn-skip-toggle):not(.btn-check-new):not(.info-icon) {
+button:not(.refresh-btn):not(.btn-secondary):not(.btn-skip-toggle):not(.btn-check-new):not(.info-icon):not(.logout-btn) {
     width: 100%;
     padding: 15px;
     background: linear-gradient(135deg, var(--primary), var(--primary-hover));
@@ -642,13 +685,13 @@ button:not(.refresh-btn):not(.btn-secondary):not(.btn-skip-toggle):not(.btn-chec
     cursor: pointer;
     transition: all 0.2s ease;
     margin-top: 8px;
-    box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2);
+    box-shadow: 0 4px 6px -1px rgba(124, 111, 255, 0.2);
     font-family: 'Inter', sans-serif;
 }
 
-button:not(.refresh-btn):not(.btn-secondary):not(.btn-skip-toggle):not(.btn-check-new):hover:not(:disabled) {
+button:not(.refresh-btn):not(.btn-secondary):not(.btn-skip-toggle):not(.btn-check-new):not(.logout-btn):hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 8px 15px -3px rgba(99, 102, 241, 0.35);
+    box-shadow: 0 8px 15px -3px rgba(124, 111, 255, 0.35);
 }
 
 /* ── Secondary button ── */

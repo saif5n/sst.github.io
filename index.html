@@ -42,6 +42,16 @@
             <h2>Content Review</h2>
         </div>
 
+    <!-- Logout button — only visible once logged in -->
+    <button id="logoutBtn" class="logout-btn hidden" type="button" onclick="handleLogout()" title="Log out">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+        Log out
+    </button>
+
     <div class="character-display" id="characterDisplay">
         <img src="Character.png" alt="Survey Team Character">
     </div>
@@ -148,5 +158,37 @@
 </div>
 
 <script src="script.js"></script>
+<script>
+    // Logout handler — clears session and resets UI back to the login screen.
+    // Wire this up to your existing session/state variables as needed.
+    function handleLogout() {
+        // Hide logout button
+        document.getElementById('logoutBtn').classList.add('hidden');
+
+        // Hide active sections
+        document.getElementById('playerSection').classList.add('hidden');
+        document.getElementById('finishedSection').classList.add('hidden');
+        document.getElementById('progressSection').classList.add('hidden');
+        document.getElementById('topInfo').classList.add('hidden');
+
+        // Show character + login form
+        document.getElementById('characterDisplay').classList.remove('hidden');
+        document.getElementById('loginSection').classList.remove('hidden');
+
+        // Clear inputs
+        document.getElementById('uidInput').value = '';
+        document.getElementById('passwordInput').value = '';
+        document.getElementById('loginError').classList.add('hidden');
+
+        // Reset any global session state your script.js uses
+        if (typeof currentUid !== 'undefined') { currentUid = null; }
+    }
+
+    // Call this from script.js after a successful login to reveal the logout button.
+    // e.g. after your login success handler: showLogoutButton();
+    function showLogoutButton() {
+        document.getElementById('logoutBtn').classList.remove('hidden');
+    }
+</script>
 </body>
 </html>
