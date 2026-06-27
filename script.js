@@ -622,6 +622,7 @@ async function executeSave(judgement, notes) {
         username: currentUser,
         url: currentVideo.url,
         platform: currentVideo.platform || "Unknown",
+        duration: currentVideo.duration || "",
         judgement: judgement,
         notes: notes
     };
