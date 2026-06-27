@@ -33,10 +33,15 @@ module.exports = async function handler(req, res) {
     try { res.end(); } catch (e) {}
   });
 
+  const cache = require('./sheets-cache');
+
   async function fetchAssignedForUid() {
-    // Look up username for UID
-    const uidResponse = await sheets.spreadsheets.values.get({ spreadsheetId, range: 'UIDs!A2:B' });
-    const users = uidResponse.data.values || [];
+    // Use cached UIDs and URLs to reduce read traffic
+    const users = await (async () => {
+      const ids = await cache.batchGetCached(sheets, spreadsheetId, ['UIDs!A2:B'], 5 * 60 * 1000);
+      return ids.data.valueRanges?.[0]?.values || [];
+    })();
+
     const userRow = users.find(row => String(row[1]).trim() === String(uid).trim());
     if (!userRow) {
       return { error: 'UID not found' };
@@ -44,8 +49,8 @@ module.exports = async function handler(req, res) {
 
     const userName = userRow[0];
 
-    const urlResponse = await sheets.spreadsheets.values.get({ spreadsheetId, range: 'URLs!A2:E' });
-    const rows = urlResponse.data.values || [];
+    const urlsRange = await cache.batchGetCached(sheets, spreadsheetId, ['URLs!A2:E'], 30 * 1000);
+    const rows = urlsRange.data.valueRanges?.[0]?.values || [];
 
     const assignedVideos = rows
       .map((row, index) => ({
@@ -91,5 +96,5 @@ module.exports = async function handler(req, res) {
     } catch (err) {
       res.write(`event: error\ndata: ${JSON.stringify({ message: err.message })}\n\n`);
     }
-  }, 10000);
+  }, 30000);
 };

@@ -15,14 +15,10 @@ module.exports = async function handler(req, res) {
   const sheets = google.sheets({ version: 'v4', auth });
 
   try {
-    // STEP 1: Look up the Name associated with this UID
-    const uidResponse = await sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range: 'UIDs!A2:B', 
-    });
-
-    const users = uidResponse.data.values || [];
-    // Convert both to strings to ensure a safe comparison
+    // STEP 1: Look up the Name associated with this UID (cached)
+    const cache = require('./sheets-cache');
+    const uidBatch = await cache.batchGetCached(sheets, spreadsheetId, ['UIDs!A2:B'], 5 * 60 * 1000);
+    const users = uidBatch.data.valueRanges?.[0]?.values || [];
     const userRow = users.find(row => String(row[1]).trim() === String(uid).trim());
 
     if (!userRow) {
@@ -31,13 +27,9 @@ module.exports = async function handler(req, res) {
 
     const userName = userRow[0]; 
 
-    // STEP 2: Fetch the URLs sheet to get assigned videos
-    const urlResponse = await sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range: 'URLs!A2:E', 
-    });
-
-    const rows = urlResponse.data.values || [];
+    // STEP 2: Fetch the URLs sheet to get assigned videos (cached)
+    const urlBatch = await cache.batchGetCached(sheets, spreadsheetId, ['URLs!A2:E'], 30 * 1000);
+    const rows = urlBatch.data.valueRanges?.[0]?.values || [];
     
     const assignedVideos = rows
       .map((row, index) => ({ 
