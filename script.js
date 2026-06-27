@@ -17,6 +17,17 @@ document.addEventListener('keydown', function(event) {
     }
 });
 
+// ── Logout button visibility helpers ──
+function showLogoutButton() {
+    const btn = document.getElementById('logoutBtn');
+    if (btn) btn.classList.remove('hidden');
+}
+
+function hideLogoutButton() {
+    const btn = document.getElementById('logoutBtn');
+    if (btn) btn.classList.add('hidden');
+}
+
 function initializeApplication() {
     const urlParams = new URLSearchParams(window.location.search);
     const previewMode = urlParams.get("preview") === "true";
@@ -45,6 +56,7 @@ function initializeApplication() {
         document.getElementById("characterDisplay").classList.add("hidden");
         document.getElementById("playerSection").classList.remove("hidden");
         document.getElementById("totalCount").innerText = allAssignedVideos.length;
+        showLogoutButton();
         loadVideo(currentIndex);
     } else if (savedUser && savedVideos && savedUid) {
         currentUser = savedUser;
@@ -60,17 +72,20 @@ function initializeApplication() {
             document.getElementById("loginSection").classList.remove("hidden");
             document.getElementById("characterDisplay").classList.remove("hidden");
             document.getElementById("finishedSection").classList.add("hidden");
+            hideLogoutButton();
         } else {
             document.getElementById("loginSection").classList.add("hidden");
             document.getElementById("characterDisplay").classList.add("hidden");
             document.getElementById("playerSection").classList.remove("hidden");
             document.getElementById("totalCount").innerText = allAssignedVideos.length;
+            showLogoutButton();
             loadVideo(currentIndex);
         }
     } else {
         localStorage.clear();
         document.getElementById("loginSection").classList.remove("hidden");
         document.getElementById("characterDisplay").classList.remove("hidden");
+        hideLogoutButton();
     }
     
     document.getElementById("loadingMsg").classList.add("hidden");
@@ -139,7 +154,7 @@ async function attemptLogin() {
             videoDrafts = {};
             
             if (allAssignedVideos.length > 0) {
-                        // Save complete active session properties
+                // Save complete active session properties
                 localStorage.setItem("currentUser", currentUser);
                 localStorage.setItem("currentUid", currentUid);
                 localStorage.setItem("assignedVideos", JSON.stringify(allAssignedVideos));
@@ -148,6 +163,7 @@ async function attemptLogin() {
 
                 document.getElementById("playerSection").classList.remove("hidden");
                 document.getElementById("totalCount").innerText = allAssignedVideos.length;
+                showLogoutButton();
                 loadVideo(currentIndex);
             } else {
                 // Instantly wipe memory so refreshing this empty state triggers a login fallback
@@ -156,6 +172,7 @@ async function attemptLogin() {
                 // Hide top info/ETA when showing the finished screen
                 const topInfoEl = document.getElementById('topInfo');
                 if (topInfoEl) topInfoEl.classList.add('hidden');
+                hideLogoutButton();
             }
         } else {
             // 3. If login fails, bring the character and form back
@@ -170,6 +187,7 @@ async function attemptLogin() {
             }
             loginBtn.innerText = "Log In";
             loginBtn.disabled = false;
+            hideLogoutButton();
         }
     } catch (error) {
         console.error("Login error details:", error);
@@ -187,6 +205,7 @@ async function attemptLogin() {
         }
         loginBtn.innerText = "Log In";
         loginBtn.disabled = false;
+        hideLogoutButton();
     }
 }
 
@@ -545,6 +564,7 @@ function moveNext() {
             // Hide top info/ETA when showing finished screen
             const topInfoFinished = document.getElementById('topInfo');
             if (topInfoFinished) topInfoFinished.classList.add('hidden');
+            hideLogoutButton();
 
             // Ensure Previous is enabled when there are items
             const prevBtn = document.getElementById('prevVideoBtn');
@@ -596,6 +616,7 @@ async function fetchAssignedVideos(uid, showLoading = true) {
                 document.getElementById("finishedSection").classList.add("hidden");
                 document.getElementById("playerSection").classList.remove("hidden");
                 document.getElementById("totalCount").innerText = allAssignedVideos.length;
+                showLogoutButton();
                 loadVideo(currentIndex);
                 alert(`Sync complete! Loaded ${allAssignedVideos.length} new video(s).`);
             } else {
@@ -606,6 +627,7 @@ async function fetchAssignedVideos(uid, showLoading = true) {
                 // Hide top info/ETA when showing finished screen
                 const topInfo = document.getElementById('topInfo');
                 if (topInfo) topInfo.classList.add('hidden');
+                hideLogoutButton();
                 alert("No new items assigned yet.");
             }
         }
@@ -637,4 +659,42 @@ function formatSecondsToETA(totalSeconds) {
         return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
     }
     return `${minutes}m`;
+}
+
+// Logout handler — clears session and resets UI back to the login screen.
+function handleLogout() {
+    localStorage.clear();
+
+    // Reset runtime state
+    allAssignedVideos = [];
+    currentIndex = 0;
+    currentUser = "";
+    currentUid = "";
+    videoDrafts = {};
+
+    // Hide all active sections
+    document.getElementById('playerSection').classList.add('hidden');
+    document.getElementById('finishedSection').classList.add('hidden');
+    document.getElementById('progressSection').classList.add('hidden');
+    document.getElementById('topInfo').classList.add('hidden');
+    document.getElementById('loadingMsg').classList.add('hidden');
+    document.getElementById('prevVideoBtn').classList.add('hidden');
+
+    // Show login
+    document.getElementById('characterDisplay').classList.remove('hidden');
+    document.getElementById('loginSection').classList.remove('hidden');
+
+    // Clear inputs
+    document.getElementById('uidInput').value = '';
+    document.getElementById('passwordInput').value = '';
+    document.getElementById('loginError').classList.add('hidden');
+
+    // Reset login button in case it was mid-request
+    const loginBtn = document.getElementById('loginBtn');
+    if (loginBtn) {
+        loginBtn.innerText = 'Log In';
+        loginBtn.disabled = false;
+    }
+
+    hideLogoutButton();
 }

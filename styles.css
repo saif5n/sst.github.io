@@ -24,7 +24,6 @@ body {
 }
 
 .container {
-    position: relative;
     background-color: var(--card-bg);
     padding: 40px;
     border-radius: 20px;
@@ -115,9 +114,7 @@ h2 {
 
 /* ── Logout button ── */
 .logout-btn {
-    position: absolute;
-    top: 20px;
-    right: 20px;
+    margin-left: auto;
     background: transparent;
     border: 1px solid var(--border-color);
     color: var(--text-muted);
