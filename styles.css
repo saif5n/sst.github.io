@@ -24,6 +24,7 @@ body {
 }
 
 .container {
+    position: relative;
     background-color: var(--card-bg);
     padding: 40px;
     border-radius: 20px;
@@ -52,25 +53,15 @@ body {
     margin: 0;
 }
 
-/* Center h2 on mobile when no prev button is visible */
+/* On mobile, center the h2 between whatever buttons flank it */
 @media (max-width: 640px) {
     .review-header-row {
-        justify-content: center;
-    }
-
-    .review-header-row h2 {
-        text-align: center;
-        width: 100%;
-    }
-
-    /* When the prev button IS visible, push h2 back to a natural position */
-    .review-header-row:has(.prev-video-btn:not(.hidden)) {
         justify-content: flex-start;
     }
 
-    .review-header-row:has(.prev-video-btn:not(.hidden)) h2 {
-        text-align: left;
-        width: auto;
+    .review-header-row h2 {
+        flex: 1;
+        text-align: center;
     }
 }
 
@@ -114,7 +105,9 @@ h2 {
 
 /* ── Logout button ── */
 .logout-btn {
-    margin-left: auto;
+    position: absolute;
+    top: 20px;
+    right: 20px;
     background: transparent;
     border: 1px solid var(--border-color);
     color: var(--text-muted);
