@@ -56,12 +56,19 @@ body {
 /* On mobile, center the h2 between whatever buttons flank it */
 @media (max-width: 640px) {
     .review-header-row {
-        justify-content: flex-start;
+        justify-content: space-between;
+        align-items: center;
     }
 
     .review-header-row h2 {
         flex: 1;
         text-align: center;
+    }
+
+    .prev-video-btn,
+    .logout-btn {
+        flex-shrink: 0;
+        margin-left: 0;
     }
 }
 
@@ -105,9 +112,7 @@ h2 {
 
 /* ── Logout button ── */
 .logout-btn {
-    position: absolute;
-    top: 20px;
-    right: 20px;
+    margin-left: auto;
     background: transparent;
     border: 1px solid var(--border-color);
     color: var(--text-muted);
