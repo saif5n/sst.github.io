@@ -36,6 +36,38 @@ body {
     animation: fadeIn 0.4s ease;
 }
 
+/* ── Prev button — standalone, above header ── */
+.prev-video-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0 0 12px 0;
+    margin: 0;
+    width: auto !important;
+    margin-top: 0 !important;
+    box-shadow: none !important;
+    transition: color 0.15s ease;
+}
+
+.prev-video-btn:hover:not(:disabled) {
+    color: var(--text-main);
+    transform: none;
+    box-shadow: none !important;
+}
+
+.prev-video-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    transform: none;
+}
+
 /* ── Header row ── */
 .review-header-row {
     display: flex;
@@ -80,34 +112,6 @@ body {
     background: var(--input-bg);
     color: var(--text-main);
     border-color: var(--primary);
-}
-
-/* ── Prev button ── */
-.prev-video-btn {
-    border: none;
-    background: transparent;
-    color: var(--text-muted);
-    border-radius: 8px;
-    padding: 6px;
-    width: 32px;
-    height: 32px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: color 0.12s ease, background 0.12s ease;
-}
-
-.prev-video-btn:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.03);
-    color: var(--text-main);
-}
-
-.prev-video-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-    transform: none;
 }
 
 h2 {
@@ -659,11 +663,11 @@ button:not(.refresh-btn):not(.btn-secondary):not(.btn-skip-toggle):not(.btn-chec
 }
 
 /* ── Shared disabled state ── */
-button:active:not(:disabled) {
+button:not(.prev-video-btn):active:not(:disabled) {
     transform: translateY(0);
 }
 
-button:disabled {
+button:not(.prev-video-btn):disabled {
     background: var(--border-color) !important;
     color: var(--text-muted) !important;
     cursor: not-allowed;

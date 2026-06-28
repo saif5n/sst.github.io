@@ -32,15 +32,17 @@
 </div>
 
 <div class="container">
+
+    <button id="prevVideoBtn" class="prev-video-btn hidden" type="button" onclick="goToPreviousVideo()" aria-label="Previous video">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        Previous
+    </button>
+
     <div class="review-header-row">
-        <button id="prevVideoBtn" class="prev-video-btn hidden" type="button" onclick="goToPreviousVideo()" title="Previous video" aria-label="Previous video">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-        </button>
         <h2>Content Review</h2>
         <div class="header-right">
-            <!-- Direct link icon — visible during review -->
             <a id="directOpenLink" href="#" target="_blank" class="direct-link-icon hidden" title="Open video directly">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
