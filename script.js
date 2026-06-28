@@ -144,19 +144,58 @@ async function silentSync(uid) {
         if (!result.success) return;
 
         const fresh = result.assignedVideos;
+        const freshIds = new Set(fresh.map(v => String(v.id ?? v.url)));
 
-        // Merge: append any video IDs not already in the saved list
-        const existingIds = new Set(allAssignedVideos.map(v => String(v.id ?? v.url)));
-        const newVideos = fresh.filter(v => !existingIds.has(String(v.id ?? v.url)));
+        // 1. Keep completed videos in local history, and keep pending videos ONLY if they are still assigned on the server
+        const keptVideos = allAssignedVideos.filter((v, idx) => {
+            if (idx < currentIndex) return true; 
+            return freshIds.has(String(v.id ?? v.url)); 
+        });
 
-        if (newVideos.length > 0) {
-            allAssignedVideos = [...allAssignedVideos, ...newVideos];
+        // 2. Identify brand new videos from server that we don't have yet
+        const keptIds = new Set(keptVideos.map(v => String(v.id ?? v.url)));
+        const newVideos = fresh.filter(v => !keptIds.has(String(v.id ?? v.url)));
+
+        const updatedVideos = [...keptVideos, ...newVideos];
+
+        // 3. Detect if the array changed to avoid unnecessary DOM updates
+        const currentVideoIdBefore = allAssignedVideos[currentIndex] ? String(allAssignedVideos[currentIndex].id ?? allAssignedVideos[currentIndex].url) : null;
+        const arrayChanged = allAssignedVideos.length !== updatedVideos.length || 
+                             allAssignedVideos.some((v, i) => String(v.id ?? v.url) !== String(updatedVideos[i]?.id ?? updatedVideos[i]?.url));
+
+        if (arrayChanged) {
+            allAssignedVideos = updatedVideos;
             localStorage.setItem("assignedVideos", JSON.stringify(allAssignedVideos));
-            document.getElementById("totalCount").innerText = allAssignedVideos.length;
-            updateProgressBar(currentIndex, allAssignedVideos.length);
+
+            // Gatekeeper checks in case all pending videos were removed
+            if (allAssignedVideos.length === 0 || currentIndex >= allAssignedVideos.length) {
+                if (allAssignedVideos.length === 0) {
+                    localStorage.clear();
+                }
+                document.getElementById("playerSection").classList.add("hidden");
+                document.getElementById("finishedSection").classList.remove("hidden");
+                setLoginViewHeader(true);
+                
+                const topInfo = document.getElementById('topInfo');
+                if (topInfo) topInfo.classList.add('hidden');
+                
+                hideProgressBar();
+                hideDirectLink();
+                hideLogoutButton();
+            } else {
+                // Queue updated, but user still has videos to review
+                document.getElementById("totalCount").innerText = allAssignedVideos.length;
+                updateProgressBar(currentIndex, allAssignedVideos.length);
+                
+                const currentVideoIdAfter = String(allAssignedVideos[currentIndex].id ?? allAssignedVideos[currentIndex].url);
+                
+                // If the video currently being viewed was removed and swapped with the next one, reload the iframe
+                if (currentVideoIdBefore !== currentVideoIdAfter) {
+                    loadVideo(currentIndex);
+                }
+            }
         }
     } catch (e) {
-        // Silent — don't bother the user on background sync failure
         console.warn("Silent sync failed:", e);
     }
 }
