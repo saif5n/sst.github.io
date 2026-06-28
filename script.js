@@ -106,6 +106,7 @@ function initializeApplication() {
             document.getElementById("totalCount").innerText = allAssignedVideos.length;
             showLogoutButton();
             loadVideo(currentIndex);
+            silentSync(currentUid); // Background sync on browser refresh
         }
     } else {
         localStorage.clear();
@@ -115,6 +116,37 @@ function initializeApplication() {
     }
     
     document.getElementById("loadingMsg").classList.add("hidden");
+}
+
+// ── Silent background sync ──
+// Fetches the latest assignments and appends any new videos without
+// disrupting the user's current session or showing loading screens.
+async function silentSync(uid) {
+    try {
+        const response = await fetch('/api/get-videos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ uid })
+        });
+        const result = await response.json();
+        if (!result.success) return;
+
+        const fresh = result.assignedVideos;
+
+        // Merge: append any video IDs not already in the saved list
+        const existingIds = new Set(allAssignedVideos.map(v => String(v.id ?? v.url)));
+        const newVideos = fresh.filter(v => !existingIds.has(String(v.id ?? v.url)));
+
+        if (newVideos.length > 0) {
+            allAssignedVideos = [...allAssignedVideos, ...newVideos];
+            localStorage.setItem("assignedVideos", JSON.stringify(allAssignedVideos));
+            document.getElementById("totalCount").innerText = allAssignedVideos.length;
+            updateProgressBar(currentIndex, allAssignedVideos.length);
+        }
+    } catch (e) {
+        // Silent — don't bother the user on background sync failure
+        console.warn("Silent sync failed:", e);
+    }
 }
 
 // Center the Content Review header only when the login view is visible

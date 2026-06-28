@@ -36,6 +36,16 @@ body {
     animation: fadeIn 0.4s ease;
 }
 
+@media (max-width: 640px) {
+    body {
+        padding: 20px 12px;
+    }
+
+    .container {
+        padding: 24px 20px;
+    }
+}
+
 /* ── Prev button — standalone, above header ── */
 .prev-video-btn {
     display: inline-flex;
@@ -85,12 +95,32 @@ body {
     margin: 0;
     flex: 1;
     text-align: center;
+    white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+    .review-header-row h2 {
+        font-size: 1.1rem;
+        letter-spacing: -0.02em;
+        text-align: left;
+    }
+
+    /* Hide the "Log out" text label, keep only the icon */
+    .logout-btn .logout-label {
+        display: none;
+    }
+
+    .logout-btn {
+        padding: 6px 8px;
+        gap: 0;
+    }
 }
 
 .header-right {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    flex-shrink: 0;
 }
 
 /* ── Direct link icon button ── */
