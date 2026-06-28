@@ -10,18 +10,14 @@
 </head>
 <body>
 
+<!-- Compact single-row status bar -->
 <div id="topInfo" class="top-info-modal hidden">
-    <div class="top-info-meta">
-        <span class="top-info-label">Reviewed</span>
-        <span class="top-info-value"><span id="currentCount">0</span> / <span id="totalCount">0</span></span>
-    </div>
-    <div class="top-info-meta top-info-eta">
-        <span class="top-info-label">ETA</span>
-        <div class="eta-row">
-            <span id="etaDisplay">--</span>
-            <button class="info-icon tooltip-icon" type="button" aria-label="ETA info" data-tooltip="The displayed time is an estimated completion time and may not be entirely accurate.">i</button>
-        </div>
-    </div>
+    <span class="top-info-counter">
+        <span id="currentCount">0</span><span class="top-info-sep">/</span><span id="totalCount">0</span>
+    </span>
+    <span class="top-info-divider"></span>
+    <span id="etaDisplay" class="top-info-eta-inline">--</span>
+    <button class="info-icon tooltip-icon" type="button" aria-label="ETA info" data-tooltip="The displayed time is an estimated completion time and may not be entirely accurate.">i</button>
     <button id="refreshBtn" class="refresh-btn top-refresh" onclick="fetchAssignedVideos(currentUid)" title="Check for new assignments">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="23 4 23 10 17 10"></polyline>
@@ -31,25 +27,36 @@
     </button>
 </div>
 
+<div id="progressBarContainer" class="progress-bar-container hidden">
+    <div id="progressBarFill" class="progress-bar-fill"></div>
+</div>
+
 <div class="container">
     <div class="review-header-row">
-        <!-- Hidden on login screen; shown by loadVideo() after login -->
         <button id="prevVideoBtn" class="prev-video-btn hidden" type="button" onclick="goToPreviousVideo()" title="Previous video" aria-label="Previous video">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <polyline points="15 18 9 12 15 6"></polyline>
             </svg>
-            <span class="prev-text">Previous</span>
         </button>
         <h2>Content Review</h2>
-        <!-- Hidden on login screen; shown by showLogoutButton() after login. margin-left:auto pushes it to the right. -->
-        <button id="logoutBtn" class="logout-btn hidden" type="button" onclick="handleLogout()" title="Log out">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                <polyline points="16 17 21 12 16 7"></polyline>
-                <line x1="21" y1="12" x2="9" y2="12"></line>
-            </svg>
-            Log out
-        </button>
+        <div class="header-right">
+            <!-- Direct link icon — visible during review -->
+            <a id="directOpenLink" href="#" target="_blank" class="direct-link-icon hidden" title="Open video directly">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <line x1="10" y1="14" x2="21" y2="3"></line>
+                </svg>
+            </a>
+            <button id="logoutBtn" class="logout-btn hidden" type="button" onclick="handleLogout()" title="Log out">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                Log out
+            </button>
+        </div>
     </div>
 
     <div class="character-display" id="characterDisplay">
@@ -84,12 +91,6 @@
     </div>
 
     <div id="playerSection" class="hidden">
-
-        <div class="fallback-link-container">
-            <span class="platform-label">Platform: <span id="platformLabel" style="font-weight:600; color:var(--text-main);">Content</span></span>
-            <a id="directOpenLink" href="#" target="_blank" class="direct-link-btn">Open directly</a>
-        </div>
-
         <div class="player-grid">
             <div class="video-container" id="videoContainer">
                 <iframe id="videoFrame" src="" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; fullscreen"></iframe>
@@ -145,7 +146,7 @@
             </svg>
         </div>
         <h3 class="finish-title">All done!</h3>
-        <p class="finish-subtitle">No more pending content assigned to you.</p>
+        <p class="finish-subtitle">You have reviewed all currently assigned content.</p>
         <p id="finishedStatLine" class="finish-stat"></p>
         <button class="btn-check-new" onclick="fetchAssignedVideos(currentUid)">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">

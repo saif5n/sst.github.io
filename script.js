@@ -28,6 +28,33 @@ function hideLogoutButton() {
     if (btn) btn.classList.add('hidden');
 }
 
+// ── Direct link icon ──
+function showDirectLink(url) {
+    const link = document.getElementById('directOpenLink');
+    if (!link) return;
+    link.href = url || '#';
+    link.classList.remove('hidden');
+}
+
+function hideDirectLink() {
+    const link = document.getElementById('directOpenLink');
+    if (link) link.classList.add('hidden');
+}
+
+// ── Progress bar ──
+function updateProgressBar(current, total) {
+    const container = document.getElementById('progressBarContainer');
+    const fill = document.getElementById('progressBarFill');
+    if (!container || !fill || total === 0) return;
+    container.classList.remove('hidden');
+    fill.style.width = ((current / total) * 100) + '%';
+}
+
+function hideProgressBar() {
+    const container = document.getElementById('progressBarContainer');
+    if (container) container.classList.add('hidden');
+}
+
 function initializeApplication() {
     const urlParams = new URLSearchParams(window.location.search);
     const previewMode = urlParams.get("preview") === "true";
@@ -65,8 +92,7 @@ function initializeApplication() {
         videoDrafts = JSON.parse(localStorage.getItem("videoDrafts") || "{}");
         currentIndex = savedIndex ? parseInt(savedIndex) : 0; 
 
-        // AUTO-LOGOUT GATEKEEPER:
-        // If they refresh while on the finished screen or have no assignments, log out immediately
+        // AUTO-LOGOUT GATEKEEPER
         if (currentIndex >= allAssignedVideos.length || allAssignedVideos.length === 0) {
             localStorage.clear();
             document.getElementById("loginSection").classList.remove("hidden");
@@ -103,7 +129,6 @@ function updateHeaderAlignment() {
     }
 }
 
-// Run on load and whenever we toggle login visibility
 window.addEventListener('DOMContentLoaded', updateHeaderAlignment);
 const observer = new MutationObserver(updateHeaderAlignment);
 const loginSection = document.getElementById('loginSection');
@@ -129,7 +154,6 @@ async function attemptLogin() {
     loginBtn.disabled = true;
     if (loginError) loginError.classList.add("hidden");
 
-    // 1. Show loading screen, hide the login section and the character image
     document.getElementById("loadingMsg").classList.remove("hidden");
     document.getElementById("loginSection").classList.add("hidden");
     document.getElementById("characterDisplay").classList.add("hidden");
@@ -142,19 +166,16 @@ async function attemptLogin() {
         });
         
         const result = await response.json();
-
-        // 2. Hide the loading screen once the server responds
         document.getElementById("loadingMsg").classList.add("hidden");
 
         if (response.ok && result.success) {
             currentUser = result.username;
-            currentUid = uid; // Save the 10-digit ID used to log in
+            currentUid = uid;
             allAssignedVideos = result.assignedVideos;
             currentIndex = 0;
             videoDrafts = {};
             
             if (allAssignedVideos.length > 0) {
-                // Save complete active session properties
                 localStorage.setItem("currentUser", currentUser);
                 localStorage.setItem("currentUid", currentUid);
                 localStorage.setItem("assignedVideos", JSON.stringify(allAssignedVideos));
@@ -166,16 +187,15 @@ async function attemptLogin() {
                 showLogoutButton();
                 loadVideo(currentIndex);
             } else {
-                // Instantly wipe memory so refreshing this empty state triggers a login fallback
                 localStorage.clear();
                 document.getElementById("finishedSection").classList.remove("hidden");
-                // Hide top info/ETA when showing the finished screen
                 const topInfoEl = document.getElementById('topInfo');
                 if (topInfoEl) topInfoEl.classList.add('hidden');
+                hideProgressBar();
+                hideDirectLink();
                 hideLogoutButton();
             }
         } else {
-            // 3. If login fails, bring the character and form back
             document.getElementById("loginSection").classList.remove("hidden");
             document.getElementById("characterDisplay").classList.remove("hidden");
             
@@ -191,8 +211,6 @@ async function attemptLogin() {
         }
     } catch (error) {
         console.error("Login error details:", error);
-        
-        // 4. Catch network crashes and bring the form and character back
         document.getElementById("loadingMsg").classList.add("hidden");
         document.getElementById("loginSection").classList.remove("hidden");
         document.getElementById("characterDisplay").classList.remove("hidden");
@@ -210,17 +228,20 @@ async function attemptLogin() {
 }
 
 async function loadVideo(index) {
-    // If we're coming from the finished screen, ensure it's hidden and player shown
     const finishedSection = document.getElementById('finishedSection');
     if (finishedSection && !finishedSection.classList.contains('hidden')) {
         finishedSection.classList.add('hidden');
         const playerSection = document.getElementById('playerSection');
         if (playerSection) playerSection.classList.remove('hidden');
     }
-    document.getElementById("currentCount").innerText = index + 1;
-    document.getElementById("totalCount").innerText = allAssignedVideos.length; 
 
-    // ETA CALCULATION
+    document.getElementById("currentCount").innerText = index + 1;
+    document.getElementById("totalCount").innerText = allAssignedVideos.length;
+
+    // Progress bar
+    updateProgressBar(index, allAssignedVideos.length);
+
+    // ETA
     let totalRemainingSeconds = 0;
     for (let i = index; i < allAssignedVideos.length; i++) {
         totalRemainingSeconds += parseDurationToSeconds(allAssignedVideos[i].duration);
@@ -230,18 +251,15 @@ async function loadVideo(index) {
 
     const videoData = allAssignedVideos[index];
     const iframe = document.getElementById("videoFrame");
-    const platformLabel = document.getElementById("platformLabel");
-    const directLink = document.getElementById("directOpenLink");
     const prevButton = document.getElementById("prevVideoBtn");
 
     let embedUrl = "";
     const rawUrl = normalizeUrl((videoData.url || "").trim());
     const platform = (videoData.platform || "").toLowerCase().trim();
 
-    platformLabel.textContent = formatPlatformName(platform);
-    if (directLink) {
-        directLink.href = rawUrl || "#";
-    }
+    // Update the direct link icon in the header
+    showDirectLink(rawUrl);
+
     prevButton.classList.remove("hidden");
     prevButton.disabled = index === 0;
 
@@ -294,7 +312,6 @@ async function loadVideo(index) {
 
     const skipSection = document.getElementById("skipReasonSection");
     const skipReasonInput = document.getElementById("skipReason");
-    // Populate skip reason from the per-video draft, but collapse the skip panel by default
     skipReasonInput.value = draft.skipReason || "";
     if (draft.skipReason && String(draft.skipReason).trim() !== "") {
         skipSection.classList.remove("hidden");
@@ -327,10 +344,7 @@ function getVideoDraftKey(videoData) {
 
 function getTikTokVideoId(url) {
     const longMatch = url.match(/(?:\/video\/)(\d+)/);
-    if (longMatch && longMatch[1]) {
-        return longMatch[1];
-    }
-
+    if (longMatch && longMatch[1]) return longMatch[1];
     return null;
 }
 
@@ -342,9 +356,7 @@ async function getTikTokOEmbedHtml(rawUrl) {
     try {
         const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://www.tiktok.com/oembed?url=${rawUrl}`)}`;
         const response = await fetch(proxyUrl);
-        if (!response.ok) {
-            return null;
-        }
+        if (!response.ok) return null;
         const data = await response.json();
         return data.html || null;
     } catch (error) {
@@ -356,15 +368,9 @@ async function getTikTokOEmbedHtml(rawUrl) {
 async function resolveTikTokShortUrl(shortUrl) {
     try {
         const response = await fetch(`/api/resolve-tiktok?url=${encodeURIComponent(shortUrl)}`);
-        if (!response.ok) {
-            return { url: shortUrl, html: null };
-        }
-
+        if (!response.ok) return { url: shortUrl, html: null };
         const json = await response.json();
-        return {
-            url: json.url || shortUrl,
-            html: json.html || null
-        };
+        return { url: json.url || shortUrl, html: json.html || null };
     } catch (error) {
         console.warn('TikTok short URL resolution failed:', error);
         return { url: shortUrl, html: null };
@@ -393,9 +399,7 @@ function renderTikTokEmbed(rawUrl, tiktokId) {
     blockquote.className = "tiktok-embed";
     blockquote.setAttribute("cite", rawUrl);
     blockquote.setAttribute("style", "width:100%;max-width:605px;");
-    if (tiktokId) {
-        blockquote.setAttribute("data-video-id", tiktokId);
-    }
+    if (tiktokId) blockquote.setAttribute("data-video-id", tiktokId);
 
     const section = document.createElement("section");
     const anchor = document.createElement("a");
@@ -408,9 +412,7 @@ function renderTikTokEmbed(rawUrl, tiktokId) {
     wrapper.appendChild(blockquote);
 
     const existing = document.getElementById("tiktokEmbedScript");
-    if (existing) {
-        existing.remove();
-    }
+    if (existing) existing.remove();
 
     const script = document.createElement("script");
     script.id = "tiktokEmbedScript";
@@ -438,24 +440,19 @@ function renderTikTokEmbedHtml(embedHtml, rawUrl) {
     wrapper.innerHTML = embedHtml;
 
     const existing = document.getElementById("tiktokEmbedScript");
-    if (existing) {
-        existing.remove();
-    }
+    if (existing) existing.remove();
 
     const script = document.createElement("script");
     script.id = "tiktokEmbedScript";
     script.src = "https://www.tiktok.com/embed.js";
     script.async = true;
     wrapper.appendChild(script);
-
     document.getElementById("videoContainer").style.display = "block";
 }
 
 function normalizeUrl(raw) {
     const markdownLinkMatch = raw.match(/\[([^\]]+)\]\((https?:\/\/[^")]+)\)/i);
-    if (markdownLinkMatch && markdownLinkMatch[2]) {
-        return markdownLinkMatch[2].trim();
-    }
+    if (markdownLinkMatch && markdownLinkMatch[2]) return markdownLinkMatch[2].trim();
     return raw;
 }
 
@@ -479,7 +476,6 @@ async function submitResult() {
     executeSave(judgement, notes);
 }
 
-// Toggles the skip reason panel open/closed
 function toggleSkip() {
     const skipSection = document.getElementById("skipReasonSection");
     skipSection.classList.toggle("hidden");
@@ -501,10 +497,8 @@ async function executeSave(judgement, notes) {
     document.getElementById("playerSection").classList.add("hidden");
     const progressSection = document.getElementById("progressSection");
     
-    // Videos remaining after this one
     const remaining = allAssignedVideos.length - (currentIndex + 1);
     document.getElementById("videosLeftText").innerText = `${remaining} video(s) remaining to review`;
-
     progressSection.classList.remove("hidden");
     
     const currentVideo = allAssignedVideos[currentIndex];
@@ -554,19 +548,19 @@ function moveNext() {
             document.getElementById("playerSection").classList.remove("hidden");
             loadVideo(currentIndex);
         } else {
-            // FINISHED ALL VIDEOS
-            // Keep session so user can navigate back; set index to end marker
             currentIndex = allAssignedVideos.length;
             localStorage.setItem("currentIndex", currentIndex);
 
+            updateProgressBar(allAssignedVideos.length, allAssignedVideos.length);
+
             document.getElementById("playerSection").classList.add("hidden");
             document.getElementById("finishedSection").classList.remove("hidden");
-            // Hide top info/ETA when showing finished screen
             const topInfoFinished = document.getElementById('topInfo');
             if (topInfoFinished) topInfoFinished.classList.add('hidden');
+            hideProgressBar();
+            hideDirectLink();
             hideLogoutButton();
 
-            // Hide Previous button on the finished screen
             const prevBtn = document.getElementById('prevVideoBtn');
             if (prevBtn) prevBtn.classList.add('hidden');
         }
@@ -574,7 +568,6 @@ function moveNext() {
 }
 
 async function fetchAssignedVideos(uid, showLoading = true) {
-    // If cache was wiped, check our active runtime variable fallback
     const lookupUid = uid || currentUid;
     
     if (!lookupUid) {
@@ -603,7 +596,6 @@ async function fetchAssignedVideos(uid, showLoading = true) {
             document.getElementById("loadingMsg").classList.add("hidden");
             
             if (allAssignedVideos.length > 0) {
-                // Re-establish session values to protect against page refreshes
                 videoDrafts = {};
                 localStorage.setItem("currentUser", currentUser);
                 localStorage.setItem("currentUid", currentUid);
@@ -620,13 +612,13 @@ async function fetchAssignedVideos(uid, showLoading = true) {
                 loadVideo(currentIndex);
                 alert(`Sync complete! Loaded ${allAssignedVideos.length} new video(s).`);
             } else {
-                // Keep things locked out if array remains empty
                 localStorage.clear();
                 document.getElementById("finishedSection").classList.remove("hidden");
                 document.getElementById("playerSection").classList.add("hidden");
-                // Hide top info/ETA when showing finished screen
                 const topInfo = document.getElementById('topInfo');
                 if (topInfo) topInfo.classList.add('hidden');
+                hideProgressBar();
+                hideDirectLink();
                 hideLogoutButton();
                 alert("No new items assigned yet.");
             }
@@ -641,12 +633,8 @@ function parseDurationToSeconds(durationStr) {
     if (!durationStr) return 0;
     const parts = String(durationStr).trim().split(':').map(Number);
     if (parts.some(isNaN)) return 0;
-    
-    if (parts.length === 2) {
-        return (parts[0] * 60) + parts[1];
-    } else if (parts.length === 3) {
-        return (parts[0] * 3600) + (parts[1] * 60) + parts[2];
-    }
+    if (parts.length === 2) return (parts[0] * 60) + parts[1];
+    if (parts.length === 3) return (parts[0] * 3600) + (parts[1] * 60) + parts[2];
     return 0;
 }
 
@@ -654,42 +642,35 @@ function formatSecondsToETA(totalSeconds) {
     if (totalSeconds <= 0) return "0m";
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.ceil((totalSeconds % 3600) / 60); 
-    
-    if (hours > 0) {
-        return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
-    }
+    if (hours > 0) return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
     return `${minutes}m`;
 }
 
-// Logout handler — clears session and resets UI back to the login screen.
 function handleLogout() {
     localStorage.clear();
 
-    // Reset runtime state
     allAssignedVideos = [];
     currentIndex = 0;
     currentUser = "";
     currentUid = "";
     videoDrafts = {};
 
-    // Hide all active sections
     document.getElementById('playerSection').classList.add('hidden');
     document.getElementById('finishedSection').classList.add('hidden');
     document.getElementById('progressSection').classList.add('hidden');
     document.getElementById('topInfo').classList.add('hidden');
     document.getElementById('loadingMsg').classList.add('hidden');
     document.getElementById('prevVideoBtn').classList.add('hidden');
+    hideProgressBar();
+    hideDirectLink();
 
-    // Show login
     document.getElementById('characterDisplay').classList.remove('hidden');
     document.getElementById('loginSection').classList.remove('hidden');
 
-    // Clear inputs
     document.getElementById('uidInput').value = '';
     document.getElementById('passwordInput').value = '';
     document.getElementById('loginError').classList.add('hidden');
 
-    // Reset login button in case it was mid-request
     const loginBtn = document.getElementById('loginBtn');
     if (loginBtn) {
         loginBtn.innerText = 'Log In';
