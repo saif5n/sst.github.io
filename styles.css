@@ -8,6 +8,7 @@
     --text-muted: #a1a1aa;
     --border-color: #3f3f46;
     --success: #10b981;
+    --counter-color: #c0c0c0;
     --accent-glow: rgba(124, 111, 255, 0.15);
 }
 
@@ -79,6 +80,10 @@ body {
 }
 
 /* ── Header row ── */
+/* 3-column grid: [left spacer] [h2] [header-right]
+   The outer columns are forced to equal width via the spacer,
+   so the h2 column stays truly centered regardless of whether
+   header-right has visible content (logout/direct-link icons). */
 .review-header-row {
     display: grid;
     grid-template-columns: 1fr auto;
@@ -230,29 +235,30 @@ h2 {
 .top-info-modal {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
     background: rgba(15, 23, 42, 0.95);
     border: 1px solid rgba(148, 163, 184, 0.14);
     border-radius: 12px;
-    padding: 8px 14px;
+    padding: 10px 16px;
     width: 100%;
     max-width: 600px;
     margin: 0 auto 10px;
     box-sizing: border-box;
 }
 
-.top-info-counter {
-    font-size: 0.88rem;
+.top-info-progress {
+    font-size: 0.9rem;
     font-weight: 700;
     color: var(--text-main);
     letter-spacing: 0.01em;
     white-space: nowrap;
 }
 
-.top-info-sep {
-    color: var(--text-muted);
-    margin: 0 2px;
-    font-weight: 400;
+.top-info-progress #currentCount,
+.top-info-progress #totalCount {
+    font-weight: 600;
+    color: var(--counter-color)
 }
 
 .top-info-divider {
@@ -263,7 +269,7 @@ h2 {
 }
 
 .top-info-eta-inline {
-    font-size: 0.82rem;
+    font-size: 0.85rem;
     font-weight: 600;
     color: var(--text-muted);
     white-space: nowrap;
@@ -282,27 +288,12 @@ h2 {
     flex-shrink: 0;
 }
 
-/* Push the refresh button to the right */
-#refreshBtn {
-    margin-left: auto;
-}
-
-.top-refresh {
-    padding: 6px 12px;
-    font-size: 0.8rem;
-}
-
 @media (max-width: 640px) {
     .top-info-modal {
         max-width: 100%;
         flex-wrap: wrap;
         gap: 8px;
-        padding: 10px 12px;
-    }
-
-    #refreshBtn {
-        width: 100%;
-        justify-content: center;
+        padding: 10px 14px;
     }
 }
 

@@ -12,19 +12,12 @@
 
 <!-- Compact single-row status bar -->
 <div id="topInfo" class="top-info-modal hidden">
-    <span class="top-info-counter">
-        <span id="currentCount">0</span><span class="top-info-sep">/</span><span id="totalCount">0</span>
+    <span id="reviewProgressText" class="top-info-progress">
+        <span id="currentCount">0</span> / <span id="totalCount">0</span>
     </span>
     <span class="top-info-divider"></span>
     <span id="etaDisplay" class="top-info-eta-inline">--</span>
     <button class="info-icon tooltip-icon" type="button" aria-label="ETA info" data-tooltip="The displayed time is an estimated completion time and may not be entirely accurate.">i</button>
-    <button id="refreshBtn" class="refresh-btn top-refresh" onclick="fetchAssignedVideos(currentUid)" title="Check for new assignments">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="23 4 23 10 17 10"></polyline>
-            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-        </svg>
-        Refresh
-    </button>
 </div>
 
 <div id="progressBarContainer" class="progress-bar-container hidden">
