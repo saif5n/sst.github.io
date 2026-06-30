@@ -80,11 +80,15 @@ body {
 
 /* ── Header row ── */
 .review-header-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto;
     align-items: center;
-    justify-content: space-between;
     gap: 12px;
     margin-bottom: 18px;
+}
+
+.review-header-spacer {
+    display: none;
 }
 
 .review-header-row h2 {
@@ -93,18 +97,34 @@ body {
     letter-spacing: -0.03em;
     color: var(--text-main);
     margin: 0;
-    flex: 1;
-    text-align: center;
+    text-align: left;
     white-space: nowrap;
+    grid-column: 1;
+    justify-self: start;
+}
+
+.header-right {
+    grid-column: 2;
+    justify-self: end;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
 }
 
 /* ── Login/finish view: normal centered header at all sizes ── */
+.header-login-view .review-header-row {
+    grid-template-columns: 1fr;
+}
+
 .header-login-view .review-header-row h2 {
     font-size: 1.7rem;
     font-weight: 700;
     letter-spacing: -0.025em;
     text-align: center;
     white-space: normal;
+    grid-column: 1;
+    justify-self: center;
 }
 
 @media (max-width: 640px) {
@@ -131,13 +151,6 @@ body {
         padding: 6px 8px;
         gap: 0;
     }
-}
-
-.header-right {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
 }
 
 /* ── Direct link icon button ── */
@@ -554,15 +567,6 @@ iframe {
 }
 
 @media (min-width: 641px) {
-    .review-header-row h2 {
-        text-align: left;
-    }
-
-    /* Login/finish view overrides left-align on desktop too */
-    .header-login-view .review-header-row h2 {
-        text-align: center;
-    }
-
     .player-grid {
         display: grid;
         grid-template-columns: minmax(320px, 1.8fr) minmax(260px, 1fr);
