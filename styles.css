@@ -120,6 +120,7 @@ body {
 /* ── Login/finish view: normal centered header at all sizes ── */
 .header-login-view .review-header-row {
     grid-template-columns: 1fr;
+    gap: 0;
 }
 
 .header-login-view .review-header-row h2 {
@@ -130,6 +131,13 @@ body {
     white-space: normal;
     grid-column: 1;
     justify-self: center;
+}
+
+/* Remove header-right entirely from the grid in login/finish view so it
+   doesn't leave behind an implicit second track + gap that would throw
+   off the centering of h2 relative to the footnote below it. */
+.header-login-view .header-right {
+    display: none;
 }
 
 @media (max-width: 640px) {
@@ -982,4 +990,19 @@ button:not(.prev-video-btn):disabled {
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-8px); }
     to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Login page footnote ── */
+.login-footnote {
+    display: none;
+    text-align: center;
+    margin: -6px 0 20px 0;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+}
+
+.header-login-view .login-footnote {
+    display: block;
 }
