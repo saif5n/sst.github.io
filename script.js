@@ -1,12 +1,13 @@
 // Global Session Variables
 let allAssignedVideos = []; 
 let currentIndex = 0;
+let maxReviewedIndex = 0; // furthest point actually submitted — only ever moves forward
 let currentUser = "";
 let currentUid = "";
 let videoDrafts = {};
 
 // ── Periodic background sync ──
-const SYNC_INTERVAL_SECONDS = 5; // adjust N here
+const SYNC_INTERVAL_SECONDS = 30; // adjust N here
 let syncIntervalId = null;
 
 function startPeriodicSync(uid) {
@@ -93,6 +94,7 @@ function initializeApplication() {
         currentUser = "Preview";
         currentUid = "0000000000";
         currentIndex = 0;
+        maxReviewedIndex = 0;
         allAssignedVideos = [
             { id: 1, url: "https://www.tiktok.com/@scout2015/video/7183715007844314117", platform: "tiktok", duration: "00:15" },
             { id: 2, url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", platform: "youtube", duration: "00:30" }
@@ -104,6 +106,7 @@ function initializeApplication() {
         localStorage.setItem("assignedVideos", JSON.stringify(allAssignedVideos));
         localStorage.setItem("videoDrafts", JSON.stringify(videoDrafts));
         localStorage.setItem("currentIndex", currentIndex);
+        localStorage.setItem("maxReviewedIndex", maxReviewedIndex);
 
         document.getElementById("loginSection").classList.add("hidden");
         document.getElementById("characterDisplay").classList.add("hidden");
@@ -119,6 +122,8 @@ function initializeApplication() {
         allAssignedVideos = JSON.parse(savedVideos);
         videoDrafts = JSON.parse(localStorage.getItem("videoDrafts") || "{}");
         currentIndex = savedIndex ? parseInt(savedIndex) : 0; 
+        const savedMaxReviewed = localStorage.getItem("maxReviewedIndex");
+        maxReviewedIndex = savedMaxReviewed !== null ? parseInt(savedMaxReviewed) : currentIndex;
 
         // AUTO-LOGOUT GATEKEEPER
         if (currentIndex >= allAssignedVideos.length || allAssignedVideos.length === 0) {
@@ -171,7 +176,7 @@ async function silentSync(uid) {
         //    edits like a TikTok URL being swapped for an Instagram one.
         const keptVideos = allAssignedVideos
             .map((v, idx) => {
-                if (idx < currentIndex) return v; // completed history stays as-is
+                if (idx < maxReviewedIndex) return v; // completed history stays as-is
                 const key = String(v.id ?? v.url);
                 return freshMap.has(key) ? freshMap.get(key) : null;
             })
@@ -288,6 +293,7 @@ async function attemptLogin() {
             currentUid = uid;
             allAssignedVideos = result.assignedVideos;
             currentIndex = 0;
+            maxReviewedIndex = 0;
             videoDrafts = {};
             
             if (allAssignedVideos.length > 0) {
@@ -296,6 +302,7 @@ async function attemptLogin() {
                 localStorage.setItem("assignedVideos", JSON.stringify(allAssignedVideos));
                 localStorage.setItem("videoDrafts", JSON.stringify(videoDrafts));
                 localStorage.setItem("currentIndex", currentIndex);
+                localStorage.setItem("maxReviewedIndex", maxReviewedIndex);
 
                 document.getElementById("playerSection").classList.remove("hidden");
                 setLoginViewHeader(false); // Player view
@@ -565,6 +572,7 @@ function renderTikTokEmbed(rawUrl, tiktokId) {
 
 function goToPreviousVideo() {
     if (currentIndex > 0) {
+        saveCurrentVideoState(); // persist judgement/notes/skipReason before leaving this video
         currentIndex -= 1;
         localStorage.setItem("currentIndex", currentIndex);
         loadVideo(currentIndex);
@@ -681,7 +689,9 @@ async function executeSave(judgement, notes) {
 
 function moveNext() {
     currentIndex++;
+    maxReviewedIndex = Math.max(maxReviewedIndex, currentIndex);
     localStorage.setItem("currentIndex", currentIndex);
+    localStorage.setItem("maxReviewedIndex", maxReviewedIndex);
     const progressSection = document.getElementById("progressSection");
     
     setTimeout(() => {
@@ -693,7 +703,9 @@ function moveNext() {
             loadVideo(currentIndex);
         } else {
             currentIndex = allAssignedVideos.length;
+            maxReviewedIndex = allAssignedVideos.length;
             localStorage.setItem("currentIndex", currentIndex);
+            localStorage.setItem("maxReviewedIndex", maxReviewedIndex);
 
             updateProgressBar(allAssignedVideos.length, allAssignedVideos.length);
 
@@ -749,7 +761,9 @@ async function fetchAssignedVideos(uid, showLoading = true) {
                 localStorage.setItem("videoDrafts", JSON.stringify(videoDrafts));
                 
                 currentIndex = 0;
+                maxReviewedIndex = 0;
                 localStorage.setItem("currentIndex", currentIndex);
+                localStorage.setItem("maxReviewedIndex", maxReviewedIndex);
 
                 document.getElementById("finishedSection").classList.add("hidden");
                 document.getElementById("playerSection").classList.remove("hidden");
@@ -803,6 +817,7 @@ function handleLogout() {
 
     allAssignedVideos = [];
     currentIndex = 0;
+    maxReviewedIndex = 0;
     currentUser = "";
     currentUid = "";
     videoDrafts = {};
