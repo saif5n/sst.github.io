@@ -1,13 +1,13 @@
 // Global Session Variables
 let allAssignedVideos = []; 
 let currentIndex = 0;
-let maxReviewedIndex = 0; // furthest point actually submitted — only ever moves forward
+let maxReviewedIndex = 0; 
 let currentUser = "";
 let currentUid = "";
 let videoDrafts = {};
 
 // ── Periodic background sync ──
-const SYNC_INTERVAL_SECONDS = 30; // adjust N here
+const SYNC_INTERVAL_SECONDS = 10; // adjust N here
 let syncIntervalId = null;
 
 function startPeriodicSync(uid) {
@@ -262,10 +262,10 @@ async function attemptLogin() {
 
     if (!uid || !password) {
         if (loginError) {
-            loginError.innerText = "Please enter both UID and Password.";
+            loginError.innerText = "Both fields cannot be empty.";
             loginError.classList.remove("hidden");
         } else {
-            alert("Please enter both UID and Password.");
+            alert("Both fields cannot be empty.");
         }
         return;
     }
@@ -328,10 +328,10 @@ async function attemptLogin() {
             setLoginViewHeader(true); // Login view
             
             if (loginError) {
-                loginError.innerText = result.message || "Invalid UID or Password.";
+                loginError.innerText = result.message || "The password or UID you entered is incorrect. Please ensure that you are using the correct credentials provided by the /crlogin command.";
                 loginError.classList.remove("hidden");
             } else {
-                alert(result.message || "Invalid UID or Password.");
+                alert(result.message || "The password or UID you entered is incorrect. Please ensure that you are using the correct credentials provided by the /crlogin command.");
             }
             loginBtn.innerText = "Log In";
             loginBtn.disabled = false;
