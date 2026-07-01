@@ -5,6 +5,24 @@ let currentUser = "";
 let currentUid = "";
 let videoDrafts = {};
 
+// ── Periodic background sync ──
+const SYNC_INTERVAL_SECONDS = 5; // adjust N here
+let syncIntervalId = null;
+
+function startPeriodicSync(uid) {
+    stopPeriodicSync(); // avoid stacking multiple intervals
+    syncIntervalId = setInterval(() => {
+        silentSync(uid);
+    }, SYNC_INTERVAL_SECONDS * 1000);
+}
+
+function stopPeriodicSync() {
+    if (syncIntervalId) {
+        clearInterval(syncIntervalId);
+        syncIntervalId = null;
+    }
+}
+
 // Add this helper for the login/finish header view
 function setLoginViewHeader(isLoginView) {
     const container = document.querySelector('.container');
@@ -120,6 +138,7 @@ function initializeApplication() {
             showLogoutButton();
             loadVideo(currentIndex);
             silentSync(currentUid); // Background sync on browser refresh
+            startPeriodicSync(currentUid); // Keep checking for edits every N seconds
         }
     } else {
         localStorage.clear();
@@ -144,13 +163,19 @@ async function silentSync(uid) {
         if (!result.success) return;
 
         const fresh = result.assignedVideos;
-        const freshIds = new Set(fresh.map(v => String(v.id ?? v.url)));
+        const freshMap = new Map(fresh.map(v => [String(v.id ?? v.url), v]));
 
-        // 1. Keep completed videos in local history, and keep pending videos ONLY if they are still assigned on the server
-        const keptVideos = allAssignedVideos.filter((v, idx) => {
-            if (idx < currentIndex) return true; 
-            return freshIds.has(String(v.id ?? v.url)); 
-        });
+        // 1. Keep completed videos in local history untouched, but for videos
+        //    still pending review, swap in the FRESH server data (not the stale
+        //    cached copy) whenever the same rowId still exists — this picks up
+        //    edits like a TikTok URL being swapped for an Instagram one.
+        const keptVideos = allAssignedVideos
+            .map((v, idx) => {
+                if (idx < currentIndex) return v; // completed history stays as-is
+                const key = String(v.id ?? v.url);
+                return freshMap.has(key) ? freshMap.get(key) : null;
+            })
+            .filter(v => v !== null);
 
         // 2. Identify brand new videos from server that we don't have yet
         const keptIds = new Set(keptVideos.map(v => String(v.id ?? v.url)));
@@ -158,10 +183,13 @@ async function silentSync(uid) {
 
         const updatedVideos = [...keptVideos, ...newVideos];
 
-        // 3. Detect if the array changed to avoid unnecessary DOM updates
+        // 3. Detect if anything actually changed — compare full objects (not
+        //    just id/url) so edited fields like platform/url/duration on an
+        //    existing rowId are correctly detected as a change.
         const currentVideoIdBefore = allAssignedVideos[currentIndex] ? String(allAssignedVideos[currentIndex].id ?? allAssignedVideos[currentIndex].url) : null;
-        const arrayChanged = allAssignedVideos.length !== updatedVideos.length || 
-                             allAssignedVideos.some((v, i) => String(v.id ?? v.url) !== String(updatedVideos[i]?.id ?? updatedVideos[i]?.url));
+        const currentVideoUrlBefore = allAssignedVideos[currentIndex] ? String(allAssignedVideos[currentIndex].url ?? "") : null;
+        const arrayChanged = allAssignedVideos.length !== updatedVideos.length ||
+                             JSON.stringify(allAssignedVideos) !== JSON.stringify(updatedVideos);
 
         if (arrayChanged) {
             allAssignedVideos = updatedVideos;
@@ -182,15 +210,19 @@ async function silentSync(uid) {
                 hideProgressBar();
                 hideDirectLink();
                 hideLogoutButton();
+                stopPeriodicSync(); // nothing left to poll for until new assignments arrive
             } else {
                 // Queue updated, but user still has videos to review
                 document.getElementById("totalCount").innerText = allAssignedVideos.length;
                 updateProgressBar(currentIndex, allAssignedVideos.length);
                 
                 const currentVideoIdAfter = String(allAssignedVideos[currentIndex].id ?? allAssignedVideos[currentIndex].url);
+                const currentVideoUrlAfter = String(allAssignedVideos[currentIndex].url ?? "");
                 
-                // If the video currently being viewed was removed and swapped with the next one, reload the iframe
-                if (currentVideoIdBefore !== currentVideoIdAfter) {
+                // Reload the iframe if the video at this index was swapped out
+                // for a different one, OR if the same rowId's URL was edited
+                // (e.g. TikTok link replaced with an Instagram link).
+                if (currentVideoIdBefore !== currentVideoIdAfter || currentVideoUrlBefore !== currentVideoUrlAfter) {
                     loadVideo(currentIndex);
                 }
             }
@@ -271,6 +303,7 @@ async function attemptLogin() {
                 document.getElementById("totalCount").innerText = allAssignedVideos.length;
                 showLogoutButton();
                 loadVideo(currentIndex);
+                startPeriodicSync(currentUid); // Keep checking for edits every N seconds
             } else {
                 localStorage.clear();
                 document.getElementById("finishedSection").classList.remove("hidden");
@@ -725,6 +758,7 @@ async function fetchAssignedVideos(uid, showLoading = true) {
                 document.getElementById("totalCount").innerText = allAssignedVideos.length;
                 showLogoutButton();
                 loadVideo(currentIndex);
+                startPeriodicSync(currentUid); // Resume polling now that there's a queue again
                 alert(`Sync complete! Loaded ${allAssignedVideos.length} new video(s).`);
             } else {
                 localStorage.clear();
@@ -764,6 +798,7 @@ function formatSecondsToETA(totalSeconds) {
 }
 
 function handleLogout() {
+    stopPeriodicSync();
     localStorage.clear();
 
     allAssignedVideos = [];
